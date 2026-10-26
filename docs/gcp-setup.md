@@ -89,7 +89,7 @@ A phone hotspot is the other fallback.
 
 ## 5. Cost and stopping
 
-Check the current price for your machine type in asia-southeast2 on the Compute Engine pricing page or the Google Cloud pricing calculator. Stop the VM when you are not rehearsing (`gcloud compute instances stop kai-lab --zone asia-southeast2-a`); the disk is still billed. The lab comes back by itself after a start. The external IP changes after a stop unless you reserve a static address.
+Check the current price for your machine type in asia-southeast2 on the Compute Engine pricing page or the Google Cloud pricing calculator. Stop the VM when you are not rehearsing (`gcloud compute instances stop kai-lab --zone asia-southeast2-a`); the disk is still billed. After a start, a boot service restarts the cluster in the right order; give it about three minutes, then run `./lab.sh preflight` (if a node still shows as not ready, run `./lab.sh restart`). The external IP changes after a stop unless you reserve a static address.
 
 ## 6. After the talk
 

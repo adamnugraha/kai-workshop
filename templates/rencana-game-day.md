@@ -77,5 +77,5 @@ Tulis postmortem latihan dengan templat postmortem yang sama seperti insiden nya
 | Lama maksimal | 3 menit |
 | Tombol berhenti | `./lab.sh chaos stop` atau `./lab.sh bank normal` |
 | Yang diamati | Circuit breaker terbuka; kursi tetap terkunci; SLO ketersediaan tetap hijau; burn rate penerbitan tiket di atas 14,4; peringatan masuk Telegram; trace menunjukkan panggilan bank habis waktu di 800 ms; setelah dihentikan, antrean pembayaran tuntas tanpa tagihan ganda |
-| Hasil di lab | Circuit breaker terbuka sekitar 25 detik setelah gangguan; peringatan page masuk sekitar 1 menit 20 detik; situs modern tanpa error; setelah bank pulih, 190 pembayaran tertunda tuntas dalam 20 detik tanpa tagihan ganda |
+| Hasil di lab | Circuit breaker terbuka sekitar 20 detik setelah gangguan; peringatan page masuk sekitar 1 menit 20 detik; situs modern tanpa error; setelah bank pulih, 190 pembayaran tertunda tuntas dalam 20 detik tanpa tagihan ganda |
 | Temuan yang biasa muncul | Pesan pulih di Telegram baru datang sekitar 30 menit setelah gangguan berhenti, karena gangguan total selama 3 menit juga memicu pasangan jendela 6 jam dan 30 menit. Ini sesuai desain dan perlu dijelaskan ke tim agar tidak dianggap peringatan macet |

@@ -23,7 +23,7 @@ If time runs short, drop Demo 5 first, then the `release good` step of Demo 2. D
 
 ## Thursday morning, one hour before
 
-1. Start the VM (if it was stopped) and open the tunnel from the laptop:
+1. Start the VM (if it was stopped), wait about three minutes for the boot service to bring the cluster up, and open the tunnel from the laptop:
    ```bash
    ssh -N -L 8080:127.0.0.1:80 -L 9090:127.0.0.1:9090 ubuntu@VM-ADDRESS
    ```
@@ -137,7 +137,7 @@ Timeline measured on the test cluster, with background traffic running for more 
 | Time | Event |
 |---|---|
 | T+0:00 | Fault starts: bank answers take 3 s, the payment worker gives up after 800 ms |
-| T+0:25 | First circuit breaker opens (panel turns red); the second worker's follows within half a minute. Bookings are still accepted and seats are held as "waiting for payment" |
+| T+0:20 | Both circuit breakers open (panel turns red). Bookings are still accepted and seats are held as "waiting for payment" |
 | T+1:20 | Page alert *RelnusaModernPenerbitanTiket* fires; Telegram gets it about 10 s later. The 1-hour burn rate passes 14.4 at about T+1:15 |
 | T+3:00 | Fault stopped |
 | T+3:15 | Both breakers closed. The 190 payments that piled up are all paid by T+3:20, with no double charges (idempotency keys) |
@@ -160,7 +160,18 @@ Do not wait for the resolved message on stage. Move on to slide 15 and Demo 5; m
 | Show | *RelNusa 3 → Peran instance database*, *Error booking per versi* and *Sumber jawaban pencarian* |
 | Run | `./lab.sh chaos matikan-db-primary`, then `./lab.sh chaos stop` afterwards |
 
-What happens: CloudNativePG notices the primary is gone and promotes the most up-to-date replica. Booking reconnects through the same `relnusa-db-rw` service. Expect a short burst of failed bookings while the new primary takes over and connections are re-established; note how long it lasts during the rehearsal, because that number is the talking point (seconds instead of the hours a manual restore takes). Search keeps answering from the cache during the switch. The old primary comes back as a replica by itself.
+What happens: CloudNativePG notices the primary is gone and promotes the most up-to-date replica. Booking reconnects through the same `relnusa-db-rw` service. The old primary comes back as a replica by itself.
+
+Measured on the test cluster (small profile, two database instances):
+
+| After the kill | Event |
+|---|---|
+| 0–20 s | No primary. About 20 booking requests fail with 503 or 504 (around 5% of modern requests in that half minute) |
+| about 20 s | The replica is promoted; bookings succeed again |
+| 20–45 s | With no replica left, searches are answered from the stale cache (the search circuit breaker opens, so they stay fast) |
+| about 45 s | The old primary is back as a replica; searches use the database again |
+
+With the full profile (three instances) a replica remains for searches throughout. The talking point is the number: about 20 seconds of failed bookings, handled by software, against the hours a manual restore of the legacy database takes.
 
 ### Optional extras if there are questions
 
@@ -176,6 +187,7 @@ What happens: CloudNativePG notices the primary is gone and promotes the most up
 | Grafana panels show "No data" | Check the time range (last 15 minutes), then `./lab.sh preflight` | Prometheus UI at http://127.0.0.1:9090 through the tunnel |
 | `chaos bank-lambat` fails with "no netem module" | `./lab.sh bank slow` | Backup video 4 |
 | Telegram message does not arrive | Show Alertmanager's alert list on *RelNusa 2* instead | Mention it and move on; the alert is visible in Grafana |
+| A node shows *NotReady* after the VM was stopped and started | `./lab.sh restart` (about 2 minutes) | |
 | A demo leaves the lab in a strange state | `./lab.sh reset`, `./lab.sh release undo`, `./lab.sh chaos stop` | `./lab.sh rebuild` takes about 3 minutes |
 | VM unreachable | Backup videos for every demo | |
 

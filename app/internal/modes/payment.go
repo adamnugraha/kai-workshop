@@ -52,7 +52,10 @@ func PaymentWorker(ctx context.Context) error {
 	for _, o := range []string{"success", "failure", "timeout", "circuit_open", "error"} {
 		paymentAttempts.WithLabelValues(o)
 	}
-	br := breaker.New(20, 10, 0.5, config.Millis("BREAKER_OPEN_MS", 10*time.Second), 3, func(s breaker.State) {
+	// Opens when at least half of the last 10 bank calls failed (minimum 5),
+	// so a slow bank is cut off within a few calls.
+	const breakerTrials = 3
+	br := breaker.New(10, 5, 0.5, config.Millis("BREAKER_OPEN_MS", 10*time.Second), breakerTrials, func(s breaker.State) {
 		circuitState.Set(float64(s))
 		slog.Warn("bank circuit breaker changed state", "state", s.String())
 	})
@@ -158,14 +161,21 @@ func PaymentWorker(ctx context.Context) error {
 				return
 			case <-t.C:
 			}
-			if br.State() == breaker.Open {
+			state := br.State()
+			if state == breaker.Open {
 				continue
 			}
+			// While half-open, claim only as many jobs as the breaker lets
+			// through as trial calls; the rest wait until it closes.
+			batch, batches := int64(100), 10
+			if state == breaker.HalfOpen {
+				batch, batches = breakerTrials, 1
+			}
 			start := "0-0"
-			for i := 0; i < 10; i++ {
+			for i := 0; i < batches; i++ {
 				msgs, next, err := rdb.XAutoClaim(ctx, &redis.XAutoClaimArgs{
 					Stream: paymentStream, Group: paymentGroup, Consumer: consumer,
-					MinIdle: 5 * time.Second, Start: start, Count: 100,
+					MinIdle: 5 * time.Second, Start: start, Count: batch,
 				}).Result()
 				if err != nil {
 					break

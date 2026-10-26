@@ -136,6 +136,10 @@ options:
     extraArgs:
       - arg: --kube-controller-manager-arg=node-monitor-grace-period=20s
         nodeFilters: [server:*]
+      # The lab uses no NetworkPolicies. Without this, an agent whose container
+      # IP changed after a VM reboot can fail to start its policy controller.
+      - arg: --disable-network-policy
+        nodeFilters: [server:*]
     nodeLabels:
       - label: topology.kubernetes.io/zone=zona-a
         nodeFilters: [server:0]
@@ -399,8 +403,49 @@ cmd_up() {
   install_platform
   deploy_apps
   cmd_traffic start
+  install_boot_service
   c_ok "lab is up in $(( ($(date +%s) - start) / 60 )) minutes"
   cmd_info
+}
+
+install_boot_service() {
+  # After a VM stop/start, Docker restarts the node containers in random order,
+  # which can leave a node "NotReady". This unit restarts the cluster in order.
+  [ -d /run/systemd/system ] || return 0
+  cat >/etc/systemd/system/relnusa-lab.service <<UNIT
+[Unit]
+Description=RelNusa lab: restart the k3d cluster in order after boot
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+TimeoutStartSec=900
+ExecStart=$ROOT/lab.sh restart
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+  if systemctl daemon-reload && systemctl enable relnusa-lab.service >/dev/null 2>&1; then
+    c_ok "boot service installed: the cluster restarts cleanly after a VM reboot"
+  else
+    c_warn "could not enable the boot service; after a reboot run ./lab.sh restart"
+  fi
+}
+
+cmd_restart() {
+  # Ordered restart: server first, then agents. Fixes nodes left NotReady.
+  cluster_exists || die "no cluster yet; run ./lab.sh up"
+  c_info "Restarting the cluster in order (about 2 minutes)"
+  k3d cluster stop "$CLUSTER" >/dev/null
+  k3d cluster start "$CLUSTER" >/dev/null
+  kubectl config use-context "k3d-$CLUSTER" >/dev/null
+  kubectl wait --for=condition=Ready nodes --all --timeout=300s >/dev/null || c_warn "not every node is ready yet"
+  pin_system_pods
+  docker start relnusa-traffic >/dev/null 2>&1 || true
+  c_ok "cluster restarted; pods need another minute or two (check with ./lab.sh preflight)"
 }
 
 cmd_rebuild() {
@@ -677,6 +722,7 @@ Setup
   ./lab.sh info                  URLs, password and the SSH tunnel command
   ./lab.sh status                nodes, pods, database primary, traffic, bank mode
   ./lab.sh preflight             check everything before going on stage
+  ./lab.sh restart               restart the cluster in order (nodes not ready after a reboot)
   ./lab.sh down                  delete the cluster
   ./lab.sh rebuild               rebuild the app image and roll the pods
   ./lab.sh alerts                re-apply alert routing after editing lab.env
@@ -712,6 +758,7 @@ main() {
   case "$cmd" in
     install-deps) cmd_install_deps "$@";;
     up) cmd_up "$@";;
+    restart) cmd_restart "$@";;
     down) cmd_down "$@";;
     rebuild) cmd_rebuild "$@";;
     info) cmd_info "$@";;

@@ -97,7 +97,7 @@ ssh -i relnusa-lab.pem -p 443 -N -L 8080:127.0.0.1:80 -L 9090:127.0.0.1:9090 ubu
 
 ## 7. Cost and stopping
 
-On-demand Linux price for `m7i.2xlarge` in Jakarta is listed at about USD 0.50 per hour (aws-pricing.com, checked 26 October 2026; confirm on the EC2 pricing page). The 100 GiB gp3 disk costs a few dollars a month. Stop the instance when you are not rehearsing; the lab comes back by itself on start, because the cluster containers restart with Docker. The public IP changes after a stop unless you attach an Elastic IP.
+On-demand Linux price for `m7i.2xlarge` in Jakarta is listed at about USD 0.50 per hour (aws-pricing.com, checked 26 October 2026; confirm on the EC2 pricing page). The 100 GiB gp3 disk costs a few dollars a month. Stop the instance when you are not rehearsing. After a start, a boot service restarts the cluster in the right order; give it about three minutes, then run `./lab.sh preflight` (if a node still shows as not ready, run `./lab.sh restart`). The public IP changes after a stop unless you attach an Elastic IP.
 
 ## 8. After the talk
 

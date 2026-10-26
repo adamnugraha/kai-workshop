@@ -7,6 +7,10 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Everything runs as root, so the cluster, its kubeconfig and the state folder
 # always belong to the same user, whoever installed it and whoever presents.
 if [ "$(id -u)" -ne 0 ]; then exec sudo -E bash "$ROOT/lab.sh" "$@"; fi
+# sudo -E keeps the caller's HOME and KUBECONFIG; always use root's, so the
+# commands reach the lab cluster and never a cluster from someone's own config.
+HOME="$(getent passwd root | cut -d: -f6)"; HOME="${HOME:-/root}"
+export HOME KUBECONFIG="$HOME/.kube/config"
 STATE="$ROOT/.lab"
 mkdir -p "$STATE"
 # Optional settings file (copy lab.env.example to lab.env).

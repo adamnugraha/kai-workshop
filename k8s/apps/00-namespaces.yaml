@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: bank
+  labels: {lab.relnusa.io/area: external}
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: legacy
+  labels: {lab.relnusa.io/area: before}
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: modern
+  labels: {lab.relnusa.io/area: after}

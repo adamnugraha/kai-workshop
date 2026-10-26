@@ -1,0 +1,16 @@
+# Lets lab.sh change the simulated bank's behaviour from the VM.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: banksim
+  namespace: bank
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: bank.__LAB_DOMAIN__
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service: {name: banksim, port: {number: 8080}}

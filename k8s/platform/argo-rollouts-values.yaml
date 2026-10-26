@@ -1,0 +1,13 @@
+controller:
+  replicas: 1
+  nodeSelector:
+    node-role.kubernetes.io/control-plane: "true"
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+dashboard:
+  enabled: true
+  readonly: false
+  nodeSelector:
+    node-role.kubernetes.io/control-plane: "true"

@@ -1,0 +1,47 @@
+# Simulated external payment provider, shared by the legacy and modern
+# systems. Its speed and error rate are changed during the demos with
+# "./lab.sh bank slow|errors|down|normal".
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: banksim
+  namespace: bank
+  labels: {app: banksim, app.kubernetes.io/part-of: relnusa}
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: banksim}
+  template:
+    metadata:
+      labels: {app: banksim, app.kubernetes.io/part-of: relnusa}
+    spec:
+      nodeSelector:
+        node-role.kubernetes.io/control-plane: "true"
+      containers:
+        - name: banksim
+          image: __IMAGE__
+          imagePullPolicy: IfNotPresent
+          args: ["banksim"]
+          env:
+            - {name: BANK_MODE, value: normal}
+            - {name: OTEL_EXPORTER_OTLP_ENDPOINT, value: "http://otel-collector.observability:4318"}
+            - {name: TRACE_SAMPLE_RATIO, value: "0.1"}
+          ports:
+            - {name: http, containerPort: 8080}
+          readinessProbe:
+            httpGet: {path: /readyz, port: http}
+            periodSeconds: 5
+          resources:
+            requests: {cpu: 50m, memory: 64Mi}
+            limits: {memory: 512Mi}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: banksim
+  namespace: bank
+  labels: {app: banksim}
+spec:
+  selector: {app: banksim}
+  ports:
+    - {name: http, port: 8080, targetPort: http}

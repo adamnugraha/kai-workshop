@@ -1,0 +1,13 @@
+# Kills one search pod. Users should notice nothing.
+apiVersion: chaos-mesh.org/v1alpha1
+kind: PodChaos
+metadata:
+  name: matikan-search
+  namespace: modern
+spec:
+  action: pod-kill
+  mode: one
+  selector:
+    namespaces: [modern]
+    labelSelectors:
+      app: search

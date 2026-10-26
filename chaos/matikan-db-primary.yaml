@@ -1,0 +1,15 @@
+# Kills the PostgreSQL primary. CloudNativePG promotes a replica; bookings
+# pause for a few seconds while search keeps answering from cache.
+apiVersion: chaos-mesh.org/v1alpha1
+kind: PodChaos
+metadata:
+  name: matikan-db-primary
+  namespace: modern
+spec:
+  action: pod-kill
+  mode: one
+  selector:
+    namespaces: [modern]
+    labelSelectors:
+      cnpg.io/cluster: relnusa-db
+      cnpg.io/instanceRole: primary

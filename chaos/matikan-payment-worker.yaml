@@ -1,0 +1,14 @@
+# Kills every payment worker at once. Jobs wait in the queue and are paid
+# when new workers start; the bank's idempotency key prevents double charges.
+apiVersion: chaos-mesh.org/v1alpha1
+kind: PodChaos
+metadata:
+  name: matikan-payment-worker
+  namespace: modern
+spec:
+  action: pod-kill
+  mode: all
+  selector:
+    namespaces: [modern]
+    labelSelectors:
+      app: payment-worker

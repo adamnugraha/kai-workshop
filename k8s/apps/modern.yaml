@@ -1,0 +1,297 @@
+# "After" application layer: separate services, several replicas spread
+# over three zones, autoscaling for search, disruption budgets, graceful
+# shutdown, and a retrying ingress. Booking is an Argo Rollout and lives in
+# booking-rollout.tpl.yaml.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway
+  namespace: modern
+  labels: {app: gateway, app.kubernetes.io/part-of: relnusa}
+spec:
+  # Fixed at 2: each replica admits ADMIT_RATE bookings per second, so the
+  # waiting room lets in about 120 per second in total.
+  replicas: 2
+  strategy:
+    rollingUpdate: {maxSurge: 1, maxUnavailable: 0}
+  selector:
+    matchLabels: {app: gateway}
+  template:
+    metadata:
+      labels: {app: gateway, app.kubernetes.io/part-of: relnusa}
+    spec:
+      terminationGracePeriodSeconds: 30
+      tolerations:
+        - {key: node.kubernetes.io/not-ready, operator: Exists, effect: NoExecute, tolerationSeconds: 15}
+        - {key: node.kubernetes.io/unreachable, operator: Exists, effect: NoExecute, tolerationSeconds: 15}
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels: {app: gateway}
+      containers:
+        - name: gateway
+          image: __IMAGE__
+          imagePullPolicy: IfNotPresent
+          args: ["gateway"]
+          env:
+            - {name: SEARCH_URL, value: "http://search"}
+            - {name: BOOKING_URL, value: "http://booking"}
+            - {name: ADMIT_RATE, value: "60"}
+            - {name: ADMIT_BURST, value: "30"}
+            - {name: UPSTREAM_TIMEOUT_MS, value: "5000"}
+            - {name: HOT_CAPACITY, value: "20000"}
+            - {name: POD_NAME, valueFrom: {fieldRef: {fieldPath: metadata.name}}}
+            - {name: NODE_NAME, valueFrom: {fieldRef: {fieldPath: spec.nodeName}}}
+            - {name: OTEL_RESOURCE_ATTRIBUTES, value: "k8s.pod.name=$(POD_NAME),k8s.node.name=$(NODE_NAME),k8s.namespace.name=modern"}
+            - {name: OTEL_EXPORTER_OTLP_ENDPOINT, value: "http://otel-collector.observability:4318"}
+            - {name: TRACE_SAMPLE_RATIO, value: "0.1"}
+          ports:
+            - {name: http, containerPort: 8080}
+          readinessProbe:
+            httpGet: {path: /readyz, port: http}
+            periodSeconds: 2
+            failureThreshold: 2
+          livenessProbe:
+            httpGet: {path: /healthz, port: http}
+            periodSeconds: 10
+            timeoutSeconds: 3
+          resources:
+            requests: {cpu: 100m, memory: 64Mi}
+            limits: {cpu: "1", memory: 256Mi}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: search
+  namespace: modern
+  labels: {app: search, app.kubernetes.io/part-of: relnusa}
+spec:
+  replicas: 2
+  strategy:
+    rollingUpdate: {maxSurge: 1, maxUnavailable: 0}
+  selector:
+    matchLabels: {app: search}
+  template:
+    metadata:
+      labels: {app: search, app.kubernetes.io/part-of: relnusa}
+    spec:
+      terminationGracePeriodSeconds: 30
+      tolerations:
+        - {key: node.kubernetes.io/not-ready, operator: Exists, effect: NoExecute, tolerationSeconds: 15}
+        - {key: node.kubernetes.io/unreachable, operator: Exists, effect: NoExecute, tolerationSeconds: 15}
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels: {app: search}
+      containers:
+        - name: search
+          image: __IMAGE__
+          imagePullPolicy: IfNotPresent
+          args: ["search"]
+          env:
+            - {name: DB_HOST, value: "__SEARCH_DB_HOST__"}
+            - {name: DB_NAME, value: app}
+            - {name: DB_USER, valueFrom: {secretKeyRef: {name: relnusa-db-app, key: username}}}
+            - {name: DB_PASSWORD, valueFrom: {secretKeyRef: {name: relnusa-db-app, key: password}}}
+            - {name: DB_MAX_CONNS, value: "20"}
+            - {name: REDIS_ADDR, value: "redis:6379"}
+            - {name: SEARCH_DB_COST_MS, value: "25"}
+            - {name: CACHE_TTL_MS, value: "5000"}
+            - {name: HOT_CAPACITY, value: "20000"}
+            - {name: POD_NAME, valueFrom: {fieldRef: {fieldPath: metadata.name}}}
+            - {name: NODE_NAME, valueFrom: {fieldRef: {fieldPath: spec.nodeName}}}
+            - {name: OTEL_RESOURCE_ATTRIBUTES, value: "k8s.pod.name=$(POD_NAME),k8s.node.name=$(NODE_NAME),k8s.namespace.name=modern"}
+            - {name: OTEL_EXPORTER_OTLP_ENDPOINT, value: "http://otel-collector.observability:4318"}
+            - {name: TRACE_SAMPLE_RATIO, value: "0.1"}
+          ports:
+            - {name: http, containerPort: 8080}
+          readinessProbe:
+            httpGet: {path: /readyz, port: http}
+            periodSeconds: 2
+            failureThreshold: 2
+          livenessProbe:
+            httpGet: {path: /healthz, port: http}
+            periodSeconds: 10
+            timeoutSeconds: 3
+          resources:
+            requests: {cpu: 50m, memory: 64Mi}
+            limits: {cpu: "1", memory: 256Mi}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment-worker
+  namespace: modern
+  labels: {app: payment-worker, app.kubernetes.io/part-of: relnusa}
+spec:
+  replicas: 2
+  strategy:
+    rollingUpdate: {maxSurge: 1, maxUnavailable: 0}
+  selector:
+    matchLabels: {app: payment-worker}
+  template:
+    metadata:
+      labels: {app: payment-worker, app.kubernetes.io/part-of: relnusa}
+    spec:
+      terminationGracePeriodSeconds: 30
+      tolerations:
+        - {key: node.kubernetes.io/not-ready, operator: Exists, effect: NoExecute, tolerationSeconds: 15}
+        - {key: node.kubernetes.io/unreachable, operator: Exists, effect: NoExecute, tolerationSeconds: 15}
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels: {app: payment-worker}
+      containers:
+        - name: payment-worker
+          image: __IMAGE__
+          imagePullPolicy: IfNotPresent
+          args: ["payment-worker"]
+          env:
+            - {name: DB_HOST, value: relnusa-db-rw}
+            - {name: DB_NAME, value: app}
+            - {name: DB_USER, valueFrom: {secretKeyRef: {name: relnusa-db-app, key: username}}}
+            - {name: DB_PASSWORD, valueFrom: {secretKeyRef: {name: relnusa-db-app, key: password}}}
+            - {name: DB_MAX_CONNS, value: "20"}
+            - {name: REDIS_ADDR, value: "redis:6379"}
+            - {name: BANK_URL, value: "http://banksim.bank:8080"}
+            - {name: BANK_TIMEOUT_MS, value: "800"}
+            - {name: WORKER_CONCURRENCY, value: "16"}
+            - {name: BREAKER_OPEN_MS, value: "10000"}
+            - {name: POD_NAME, valueFrom: {fieldRef: {fieldPath: metadata.name}}}
+            - {name: NODE_NAME, valueFrom: {fieldRef: {fieldPath: spec.nodeName}}}
+            - {name: OTEL_RESOURCE_ATTRIBUTES, value: "k8s.pod.name=$(POD_NAME),k8s.node.name=$(NODE_NAME),k8s.namespace.name=modern"}
+            - {name: OTEL_EXPORTER_OTLP_ENDPOINT, value: "http://otel-collector.observability:4318"}
+            - {name: TRACE_SAMPLE_RATIO, value: "0.1"}
+          ports:
+            - {name: http, containerPort: 8080}
+          readinessProbe:
+            httpGet: {path: /readyz, port: http}
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: {path: /healthz, port: http}
+            periodSeconds: 10
+            timeoutSeconds: 3
+          resources:
+            requests: {cpu: 50m, memory: 64Mi}
+            limits: {cpu: "1", memory: 256Mi}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gateway
+  namespace: modern
+  labels: {app: gateway}
+spec:
+  selector: {app: gateway}
+  ports:
+    - {name: http, port: 80, targetPort: http}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: search
+  namespace: modern
+  labels: {app: search}
+spec:
+  selector: {app: search}
+  ports:
+    - {name: http, port: 80, targetPort: http}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: booking
+  namespace: modern
+  labels: {app: booking}
+spec:
+  selector: {app: booking}
+  ports:
+    - {name: http, port: 80, targetPort: http}
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: search
+  namespace: modern
+spec:
+  scaleTargetRef: {apiVersion: apps/v1, kind: Deployment, name: search}
+  minReplicas: 2
+  maxReplicas: 6
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target: {type: Utilization, averageUtilization: 70}
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+        - {type: Pods, value: 2, periodSeconds: 15}
+    scaleDown:
+      stabilizationWindowSeconds: 120
+      policies:
+        - {type: Pods, value: 1, periodSeconds: 30}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: gateway
+  namespace: modern
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels: {app: gateway}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: search
+  namespace: modern
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels: {app: search}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: booking
+  namespace: modern
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels: {app: booking}
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: retry
+  namespace: modern
+spec:
+  retry:
+    attempts: 3
+    initialInterval: 100ms
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app
+  namespace: modern
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: modern-retry@kubernetescrd
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: app.__LAB_DOMAIN__
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service: {name: gateway, port: {number: 80}}

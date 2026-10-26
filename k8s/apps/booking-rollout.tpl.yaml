@@ -1,0 +1,103 @@
+# Booking service as an Argo Rollout: a new version first gets 25% of the
+# pods while Prometheus checks its error rate. If the canary's error rate
+# goes above 5%, the rollout aborts and traffic stays on the old version.
+# lab.sh fills __APP_VERSION__ and __FAULT_ERROR_RATE__ ("./lab.sh release
+# good|bad|undo").
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: booking-error-rate
+  namespace: modern
+spec:
+  args:
+    - name: canary-hash
+  metrics:
+    - name: canary-error-rate
+      interval: 15s
+      failureLimit: 1
+      successCondition: "len(result) == 0 || isNaN(result[0]) || result[0] < 0.05"
+      provider:
+        prometheus:
+          address: http://kps-prometheus.observability:9090
+          query: |
+            sum(rate(http_requests_total{namespace="modern", service="booking", route="/api/bookings", code=~"5..", rollouts_pod_template_hash="{{args.canary-hash}}"}[1m]))
+            /
+            sum(rate(http_requests_total{namespace="modern", service="booking", route="/api/bookings", rollouts_pod_template_hash="{{args.canary-hash}}"}[1m]))
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: booking
+  namespace: modern
+  labels: {app: booking, app.kubernetes.io/part-of: relnusa}
+spec:
+  replicas: 4
+  revisionHistoryLimit: 5
+  selector:
+    matchLabels: {app: booking}
+  strategy:
+    canary:
+      maxSurge: 1
+      maxUnavailable: 0
+      analysis:
+        templates:
+          - templateName: booking-error-rate
+        startingStep: 1
+        args:
+          - name: canary-hash
+            valueFrom:
+              podTemplateHashValue: Latest
+      steps:
+        - setWeight: 25
+        - pause: {duration: 60s}
+        - setWeight: 50
+        - pause: {duration: 30s}
+        - setWeight: 100
+  template:
+    metadata:
+      labels: {app: booking, app.kubernetes.io/part-of: relnusa}
+    spec:
+      terminationGracePeriodSeconds: 30
+      tolerations:
+        - {key: node.kubernetes.io/not-ready, operator: Exists, effect: NoExecute, tolerationSeconds: 15}
+        - {key: node.kubernetes.io/unreachable, operator: Exists, effect: NoExecute, tolerationSeconds: 15}
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels: {app: booking}
+      containers:
+        - name: booking
+          image: __IMAGE__
+          imagePullPolicy: IfNotPresent
+          args: ["booking"]
+          env:
+            - {name: APP_VERSION, value: "__APP_VERSION__"}
+            - {name: FAULT_ERROR_RATE, value: "__FAULT_ERROR_RATE__"}
+            - {name: DB_HOST, value: relnusa-db-rw}
+            - {name: DB_NAME, value: app}
+            - {name: DB_USER, valueFrom: {secretKeyRef: {name: relnusa-db-app, key: username}}}
+            - {name: DB_PASSWORD, valueFrom: {secretKeyRef: {name: relnusa-db-app, key: password}}}
+            - {name: DB_MAX_CONNS, value: "30"}
+            - {name: REDIS_ADDR, value: "redis:6379"}
+            - {name: HOLD_MS, value: "600000"}
+            - {name: HOT_CAPACITY, value: "20000"}
+            - {name: POD_NAME, valueFrom: {fieldRef: {fieldPath: metadata.name}}}
+            - {name: NODE_NAME, valueFrom: {fieldRef: {fieldPath: spec.nodeName}}}
+            - {name: OTEL_RESOURCE_ATTRIBUTES, value: "k8s.pod.name=$(POD_NAME),k8s.node.name=$(NODE_NAME),k8s.namespace.name=modern"}
+            - {name: OTEL_EXPORTER_OTLP_ENDPOINT, value: "http://otel-collector.observability:4318"}
+            - {name: TRACE_SAMPLE_RATIO, value: "0.1"}
+          ports:
+            - {name: http, containerPort: 8080}
+          readinessProbe:
+            httpGet: {path: /readyz, port: http}
+            periodSeconds: 2
+            failureThreshold: 2
+          livenessProbe:
+            httpGet: {path: /healthz, port: http}
+            periodSeconds: 10
+            timeoutSeconds: 3
+          resources:
+            requests: {cpu: 50m, memory: 64Mi}
+            limits: {cpu: "1", memory: 256Mi}

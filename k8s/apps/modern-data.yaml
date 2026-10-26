@@ -1,0 +1,92 @@
+# "After" data layer: PostgreSQL with one primary and two replicas spread
+# over three nodes, managed by CloudNativePG (automatic failover), plus
+# Redis for the search cache and the payment queue.
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: relnusa-db
+  namespace: modern
+spec:
+  instances: __DB_INSTANCES__
+  imageName: ghcr.io/cloudnative-pg/postgresql:17.10-minimal-trixie
+  primaryUpdateStrategy: unsupervised
+  failoverDelay: 0
+  switchoverDelay: 30
+  storage:
+    size: 2Gi
+    storageClass: local-path
+  bootstrap:
+    initdb:
+      database: app
+      owner: app
+  postgresql:
+    parameters:
+      max_connections: "300"
+      shared_buffers: "128MB"
+      log_min_duration_statement: "1000"
+  resources:
+    requests: {cpu: 100m, memory: 256Mi}
+    limits: {memory: 1Gi}
+  affinity:
+    enablePodAntiAffinity: true
+    topologyKey: kubernetes.io/hostname
+    podAntiAffinityType: preferred
+    tolerations:
+      - {key: node.kubernetes.io/not-ready, operator: Exists, effect: NoExecute, tolerationSeconds: 15}
+      - {key: node.kubernetes.io/unreachable, operator: Exists, effect: NoExecute, tolerationSeconds: 15}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: relnusa-db
+  namespace: modern
+spec:
+  selector:
+    matchLabels:
+      cnpg.io/cluster: relnusa-db
+      cnpg.io/podRole: instance
+  podMetricsEndpoints:
+    - port: metrics
+      interval: 10s
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: modern
+  labels: {app: redis}
+spec:
+  replicas: 1
+  strategy: {type: Recreate}
+  selector:
+    matchLabels: {app: redis}
+  template:
+    metadata:
+      labels: {app: redis}
+    spec:
+      # In this lab Redis is a single instance on the control-plane node.
+      # In production it would be replicated (Sentinel or a managed service).
+      nodeSelector:
+        node-role.kubernetes.io/control-plane: "true"
+      containers:
+        - name: redis
+          image: redis:7.4.10-alpine
+          args: ["--save", "", "--appendonly", "no", "--maxmemory", "512mb", "--maxmemory-policy", "noeviction"]
+          ports:
+            - {name: redis, containerPort: 6379}
+          readinessProbe:
+            exec: {command: ["redis-cli", "ping"]}
+            periodSeconds: 5
+          resources:
+            requests: {cpu: 50m, memory: 64Mi}
+            limits: {memory: 768Mi}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: modern
+spec:
+  selector: {app: redis}
+  ports:
+    - {name: redis, port: 6379, targetPort: redis}

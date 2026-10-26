@@ -1,0 +1,18 @@
+# Chaos Mesh on k3s: point the daemon at the k3s containerd socket.
+chaosDaemon:
+  runtime: containerd
+  socketPath: /run/k3s/containerd/containerd.sock
+controllerManager:
+  replicaCount: 1
+  nodeSelector:
+    node-role.kubernetes.io/control-plane: "true"
+dashboard:
+  # The dashboard is reachable only through the SSH tunnel, so the token
+  # login is switched off to keep the live demo simple.
+  securityMode: false
+  persistentVolume:
+    enabled: false
+  nodeSelector:
+    node-role.kubernetes.io/control-plane: "true"
+dnsServer:
+  create: false

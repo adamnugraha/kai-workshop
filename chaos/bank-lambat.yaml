@@ -1,0 +1,20 @@
+# Adds 3 seconds of network delay to every answer from the bank for up to
+# 15 minutes. The legacy system stalls; the modern one opens its circuit
+# breaker and keeps taking bookings.
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: bank-lambat
+  namespace: bank
+spec:
+  action: delay
+  mode: all
+  selector:
+    namespaces: [bank]
+    labelSelectors:
+      app: banksim
+  delay:
+    latency: "3s"
+    jitter: "300ms"
+    correlation: "0"
+  duration: "15m"

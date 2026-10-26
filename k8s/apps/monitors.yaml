@@ -1,0 +1,38 @@
+# Scrape every RelNusa process every 5 seconds, keeping the pod's app label
+# and the Argo Rollouts revision hash (used by the canary analysis).
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: relnusa
+  namespace: observability
+spec:
+  namespaceSelector:
+    matchNames: [legacy, modern, bank]
+  selector:
+    matchLabels:
+      app.kubernetes.io/part-of: relnusa
+  podTargetLabels: [app, rollouts-pod-template-hash]
+  podMetricsEndpoints:
+    - port: http
+      path: /metrics
+      interval: 5s
+---
+# Traefik request metrics: what users actually experienced at the edge.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: traefik
+  namespace: observability
+spec:
+  namespaceSelector:
+    matchNames: [kube-system]
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: traefik
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 5s
+      # Traefik's own "service" label (the routed service) must win over
+      # the Kubernetes service name of the metrics endpoint.
+      honorLabels: true

@@ -1,0 +1,142 @@
+# Service level objectives for the RelNusa lab, in Sloth format.
+# Generate the Prometheus rules with:   ./k8s/slo/generate.sh
+#
+# Availability and latency are measured at the edge (Traefik router
+# metrics, which also count 503s when no pod is available), which is what
+# a passenger experiences. Ticket issuance is measured at the payment
+# worker, because a site can answer quickly while no tickets are issued.
+apiVersion: sloth.slok.dev/v1
+kind: PrometheusServiceLevel
+metadata:
+  name: relnusa-modern
+  namespace: observability
+spec:
+  service: "relnusa-modern"
+  labels:
+    arsitektur: modern
+    team: relnusa
+  slos:
+    - name: "ketersediaan"
+      objective: 99.9
+      description: "Permintaan penumpang yang dijawab tanpa error server (5xx) di pintu masuk."
+      sli:
+        events:
+          errorQuery: sum(rate(traefik_router_requests_total{router=~"modern-app-.*",code=~"5.."}[{{.window}}]))
+          totalQuery: sum(rate(traefik_router_requests_total{router=~"modern-app-.*"}[{{.window}}]))
+      alerting:
+        name: RelnusaModernKetersediaan
+        labels:
+          category: availability
+        annotations:
+          title: "Ketersediaan aplikasi modern turun"
+          summary: "Error budget ketersediaan (target 99,9%) terpakai jauh lebih cepat dari normal."
+          runbook: "Lihat dasbor RelNusa 2 · SLO, lalu runbook 'Ketersediaan turun' di repo."
+        pageAlert:
+          labels:
+            severity: page
+        ticketAlert:
+          labels:
+            severity: ticket
+    - name: "latensi"
+      objective: 99
+      description: "Permintaan penumpang yang dijawab dalam 500 milidetik."
+      sli:
+        events:
+          errorQuery: |
+            (
+              sum(rate(traefik_router_request_duration_seconds_count{router=~"modern-app-.*"}[{{.window}}]))
+              -
+              sum(rate(traefik_router_request_duration_seconds_bucket{router=~"modern-app-.*",le="0.5"}[{{.window}}]))
+            )
+          totalQuery: sum(rate(traefik_router_request_duration_seconds_count{router=~"modern-app-.*"}[{{.window}}]))
+      alerting:
+        name: RelnusaModernLatensi
+        labels:
+          category: latency
+        annotations:
+          title: "Aplikasi modern melambat"
+          summary: "Terlalu banyak permintaan lebih lambat dari 500 ms (target 99% di bawah 500 ms)."
+        pageAlert:
+          labels:
+            severity: page
+        ticketAlert:
+          labels:
+            severity: ticket
+    - name: "penerbitan-tiket"
+      objective: 99.9
+      description: "Upaya pembayaran yang berhasil sehingga e-tiket terbit."
+      sli:
+        events:
+          errorQuery: sum(rate(payment_attempts_total{namespace="modern",outcome!="success"}[{{.window}}]))
+          totalQuery: sum(rate(payment_attempts_total{namespace="modern"}[{{.window}}]))
+      alerting:
+        name: RelnusaModernPenerbitanTiket
+        labels:
+          category: journey
+        annotations:
+          title: "E-tiket gagal terbit"
+          summary: "Pembayaran ke bank gagal atau tertunda; penumpang belum menerima e-tiket meski situs tetap cepat."
+          runbook: "Cek status bank dan circuit breaker di dasbor RelNusa 3 · Di dalam arsitektur modern."
+        pageAlert:
+          labels:
+            severity: page
+        ticketAlert:
+          labels:
+            severity: ticket
+---
+apiVersion: sloth.slok.dev/v1
+kind: PrometheusServiceLevel
+metadata:
+  name: relnusa-legacy
+  namespace: observability
+spec:
+  service: "relnusa-legacy"
+  labels:
+    arsitektur: legacy
+    team: relnusa
+  slos:
+    - name: "ketersediaan"
+      objective: 99.9
+      description: "Permintaan penumpang yang dijawab tanpa error server (5xx) di pintu masuk."
+      sli:
+        events:
+          errorQuery: sum(rate(traefik_router_requests_total{router=~"legacy-legacy-.*",code=~"5.."}[{{.window}}]))
+          totalQuery: sum(rate(traefik_router_requests_total{router=~"legacy-legacy-.*"}[{{.window}}]))
+      alerting:
+        name: RelnusaLegacyKetersediaan
+        labels:
+          category: availability
+        annotations:
+          title: "Ketersediaan aplikasi lama turun"
+          summary: "Error budget ketersediaan aplikasi lama (target 99,9%) terpakai jauh lebih cepat dari normal."
+        pageAlert:
+          labels:
+            severity: page
+        ticketAlert:
+          labels:
+            severity: ticket
+    - name: "latensi"
+      objective: 99
+      description: "Permintaan penumpang yang dijawab dalam 500 milidetik."
+      sli:
+        events:
+          errorQuery: |
+            (
+              sum(rate(traefik_router_request_duration_seconds_count{router=~"legacy-legacy-.*"}[{{.window}}]))
+              -
+              sum(rate(traefik_router_request_duration_seconds_bucket{router=~"legacy-legacy-.*",le="0.5"}[{{.window}}]))
+            )
+          totalQuery: sum(rate(traefik_router_request_duration_seconds_count{router=~"legacy-legacy-.*"}[{{.window}}]))
+      alerting:
+        name: RelnusaLegacyLatensi
+        labels:
+          category: latency
+        annotations:
+          title: "Aplikasi lama melambat"
+          summary: "Terlalu banyak permintaan lebih lambat dari 500 ms (target 99% di bawah 500 ms)."
+        pageAlert:
+          labels:
+            severity: page
+        ticketAlert:
+          labels:
+            severity: ticket

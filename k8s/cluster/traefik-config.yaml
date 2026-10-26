@@ -1,0 +1,33 @@
+# Tunes the Traefik ingress that ships with k3s:
+# - runs on the control-plane node (the node the demos never stop)
+# - gives up on a dead pod after 1 s and on a stuck answer after 15 s
+#   (a stuck request becomes a 504, as a real load balancer would report)
+# - exposes request metrics, which are the source of truth for the SLOs
+apiVersion: helm.cattle.io/v1
+kind: HelmChartConfig
+metadata:
+  name: traefik
+  namespace: kube-system
+spec:
+  valuesContent: |-
+    deployment:
+      replicas: 1
+    nodeSelector:
+      node-role.kubernetes.io/control-plane: "true"
+    additionalArguments:
+      - "--serversTransport.forwardingTimeouts.dialTimeout=1s"
+      - "--serversTransport.forwardingTimeouts.responseHeaderTimeout=15s"
+      - "--serversTransport.forwardingTimeouts.idleConnTimeout=30s"
+    metrics:
+      prometheus:
+        entryPoint: metrics
+        addEntryPointsLabels: true
+        addRoutersLabels: true
+        addServicesLabels: true
+        buckets: "0.05,0.1,0.25,0.5,1,2.5,5,10,15,20"
+        service:
+          enabled: true
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi

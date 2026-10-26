@@ -1,0 +1,148 @@
+# kube-prometheus-stack: Prometheus, Alertmanager, Grafana, node and
+# Kubernetes metrics. __LAB_DOMAIN__ and __GRAFANA_PASSWORD__ are filled in
+# by lab.sh. Platform pieces run on the control-plane node, which the demos
+# never shut down.
+fullnameOverride: kps
+
+defaultRules:
+  create: true
+  rules:
+    etcd: false
+    kubeControllerManager: false
+    kubeSchedulerAlerting: false
+    kubeSchedulerRecording: false
+    kubeProxy: false
+    windows: false
+
+kubeEtcd:
+  enabled: false
+kubeControllerManager:
+  enabled: false
+kubeScheduler:
+  enabled: false
+kubeProxy:
+  enabled: false
+
+prometheusOperator:
+  nodeSelector:
+    node-role.kubernetes.io/control-plane: "true"
+  admissionWebhooks:
+    patch:
+      nodeSelector:
+        node-role.kubernetes.io/control-plane: "true"
+
+kube-state-metrics:
+  nodeSelector:
+    node-role.kubernetes.io/control-plane: "true"
+
+prometheus:
+  service:
+    type: NodePort
+    nodePort: 30090
+  ingress:
+    enabled: true
+    ingressClassName: traefik
+    hosts:
+      - prometheus.__LAB_DOMAIN__
+    paths:
+      - /
+  prometheusSpec:
+    nodeSelector:
+      node-role.kubernetes.io/control-plane: "true"
+    scrapeInterval: 10s
+    evaluationInterval: 15s
+    retention: 10d
+    retentionSize: 12GB
+    enableRemoteWriteReceiver: true
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    ruleSelectorNilUsesHelmValues: false
+    probeSelectorNilUsesHelmValues: false
+    scrapeConfigSelectorNilUsesHelmValues: false
+    resources:
+      requests:
+        cpu: 200m
+        memory: 1Gi
+      limits:
+        memory: 6Gi
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: local-path
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 20Gi
+
+alertmanager:
+  ingress:
+    enabled: true
+    ingressClassName: traefik
+    hosts:
+      - alertmanager.__LAB_DOMAIN__
+    paths:
+      - /
+  alertmanagerSpec:
+    nodeSelector:
+      node-role.kubernetes.io/control-plane: "true"
+    resources:
+      requests:
+        cpu: 20m
+        memory: 64Mi
+  templateFiles:
+    relnusa.tmpl: |-
+      {{ define "relnusa.telegram" -}}
+      {{ if eq .Status "firing" }}🔴 <b>PERINGATAN</b>{{ else }}✅ <b>PULIH</b>{{ end }} · Lab RelNusa
+      {{ range .Alerts -}}
+      <b>{{ .Annotations.title }}</b>
+      {{ .Annotations.summary }}
+      Layanan: <code>{{ .Labels.sloth_service }}</code> · SLO: <code>{{ .Labels.sloth_slo }}</code> · Tingkat: <b>{{ .Labels.severity }}</b>
+      {{ if .Annotations.runbook }}Runbook: {{ .Annotations.runbook }}{{ end }}
+      {{ end -}}
+      {{- end }}
+
+grafana:
+  nodeSelector:
+    node-role.kubernetes.io/control-plane: "true"
+  adminUser: admin
+  adminPassword: __GRAFANA_PASSWORD__
+  ingress:
+    enabled: true
+    ingressClassName: traefik
+    hosts:
+      - grafana.__LAB_DOMAIN__
+    path: /
+  grafana.ini:
+    auth.anonymous:
+      enabled: true
+      org_role: Viewer
+    dashboards:
+      default_home_dashboard_path: /tmp/dashboards/RelNusa/relnusa-00-ringkasan.json
+    users:
+      default_theme: light
+    analytics:
+      check_for_updates: false
+      reporting_enabled: false
+    news:
+      news_feed_enabled: false
+  defaultDashboardsTimezone: browser
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+      labelValue: "1"
+      searchNamespace: ALL
+      folderAnnotation: grafana_folder
+      provider:
+        foldersFromFilesStructure: true
+  additionalDataSources:
+    - name: Jaeger
+      type: jaeger
+      uid: jaeger
+      url: http://jaeger.observability:16686
+      access: proxy
+      editable: false
+  resources:
+    requests:
+      cpu: 50m
+      memory: 192Mi

@@ -8,6 +8,8 @@ LAB_DIR="${LAB_DIR:-/opt/kai-workshop}"
 LOG=/var/log/relnusa-lab-install.log
 
 [ "$(id -u)" -eq 0 ] || { echo "run with sudo"; exit 1; }
+# Cloud boot scripts (EC2 user data, GCE startup scripts) may run without HOME.
+export HOME="${HOME:-/root}"
 exec > >(tee -a "$LOG") 2>&1
 echo "== $(date -Is) RelNusa lab bootstrap"
 export DEBIAN_FRONTEND=noninteractive

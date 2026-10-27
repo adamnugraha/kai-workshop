@@ -23,28 +23,26 @@ If time runs short, drop Demo 5 first, then the `release good` step of Demo 2. D
 
 ## Thursday morning, one hour before
 
-1. Start the VM (if it was stopped), wait about three minutes for the boot service to bring the cluster up, and open the tunnel from the laptop:
-   ```bash
-   ssh -N -L 8080:127.0.0.1:80 -L 9090:127.0.0.1:9090 ubuntu@VM-ADDRESS
-   ```
+1. Start the VM (if it was stopped) and wait about five minutes for the boot service to bring the cluster up. SSH in for the terminal (or use the cloud console's browser shell).
 2. On the VM:
    ```bash
-   cd kai-workshop
+   cd /opt/kai-workshop        # or wherever you cloned it
+   ./lab.sh info               # the addresses for the browser tabs, and the tools password
    ./lab.sh traffic start      # if it is not already running; it should run for an hour before Session 2
    ./lab.sh reset
    ./lab.sh preflight          # must end with "ready"
    ./lab.sh telegram-test      # message arrives in the group within about 15 seconds
    ```
-   `preflight` checks nodes, pods, the sites, the booking release, the database, chaos experiments, the bank, background traffic, Prometheus targets, the five SLOs, firing alerts, Telegram and network fault support.
-3. Browser tabs, in this order (Chrome or Edge, zoom 125% so the back row can read the panels):
+   `preflight` checks nodes, pods, the sites, the login on the operator tools, that the lab answers at its public address, the booking release, the database, chaos experiments, the bank, background traffic, Prometheus targets, the five SLOs, firing alerts, Telegram and network fault support.
+3. Browser tabs, in this order (Chrome or Edge, zoom 125% so the back row can read the panels). The addresses below are written `<site>.<domain>`; `./lab.sh info` prints the real ones (`app.<ip>.sslip.io` in public mode, `app.localhost:8080` over a tunnel):
    1. The session deck
    2. Grafana · `RelNusa · 1 · Sebelum vs sesudah` (time range: last 15 minutes, refresh 5s)
    3. Grafana · `RelNusa · 2 · SLO dan error budget` (last 30 minutes)
    4. Grafana · `RelNusa · 3 · Di dalam arsitektur modern` (last 15 minutes)
-   5. http://legacy.localhost:8080 and http://app.localhost:8080 side by side
-   6. http://rollouts.localhost:8080 (namespace `modern`, rollout `booking`)
-   7. http://jaeger.localhost:8080
-   8. http://chaos.localhost:8080
+   5. `legacy.<domain>` and `app.<domain>` side by side
+   6. `rollouts.<domain>` (namespace `modern`, rollout `booking`; log in once as `admin`)
+   7. `jaeger.<domain>`
+   8. `chaos.<domain>`
    9. The Telegram group (desktop app or web)
 4. A terminal on the VM with a large font (at least 20 pt), the repository folder open.
 
@@ -62,7 +60,7 @@ If time runs short, drop Demo 5 first, then the `release good` step of Demo 2. D
 Point at, in order:
 1. *Persentase permintaan berhasil*: the legacy line falls well below 100% within seconds.
 2. *Waktu respons p95*: legacy climbs to several seconds and then to the 15 s timeout.
-3. During the legacy run, open a search page on http://legacy.localhost:8080. It stalls too, although only one train is being booked. That is the shared connection pool and row locks in the monolith.
+3. During the legacy run, open a search page on the legacy site. It stalls too, although only one train is being booked. That is the shared connection pool and row locks in the monolith.
 4. Run the modern spike. The success line stays flat at 100% and p95 stays in milliseconds. Buyers above capacity land in the virtual waiting room panel instead of getting an error.
 
 Expected (from the small test cluster, refresh on the VM): legacy loses tens of percent of requests with p95 in the 10–15 s range; modern loses none with p95 under 100 ms.
@@ -148,7 +146,7 @@ Why the alert stays on for half an hour: a 3-minute total outage also trips the 
 Talking points while waiting:
 - *Ketersediaan* on *RelNusa 2* stays green the whole time. The site never failed; only ticket issuance did. That is why there is a separate journey SLO.
 - In Jaeger, pick service `payment-worker`, find a trace with an error, and show the bank span cut off at 800 ms.
-- Try a booking on http://app.localhost:8080 during the fault: it is accepted and shown as waiting for payment.
+- Try a booking on the modern site during the fault: it is accepted and shown as waiting for payment.
 - Nothing about CPU or memory triggered anything.
 
 Do not wait for the resolved message on stage. Move on to slide 15 and Demo 5; mention later in the session when it arrives.
@@ -183,8 +181,9 @@ With the full profile (three instances) a replica remains for searches throughou
 
 | Symptom | Quick fix | If that fails |
 |---|---|---|
-| Browser cannot open `*.localhost:8080` | Restart the SSH tunnel | Use the backup videos |
-| Grafana panels show "No data" | Check the time range (last 15 minutes), then `./lab.sh preflight` | Prometheus UI at http://127.0.0.1:9090 through the tunnel |
+| Browser cannot open the lab's addresses | Public mode: try from your phone on mobile data; if that works, the venue blocks sslip.io or port 80, so use the hotspot. Tunnel mode: restart the SSH tunnel | Use the backup videos |
+| The public IP changed (no Elastic or static IP) | `./lab.sh update-ip` (the boot service normally does this) | |
+| Grafana panels show "No data" | Check the time range (last 15 minutes), then `./lab.sh preflight` | Prometheus at `prometheus.<domain>` |
 | `chaos bank-lambat` fails with "no netem module" | `./lab.sh bank slow` | Backup video 4 |
 | Telegram message does not arrive | Show Alertmanager's alert list on *RelNusa 2* instead | Mention it and move on; the alert is visible in Grafana |
 | A node shows *NotReady* after the VM was stopped and started | `./lab.sh restart` (about 2 minutes) | |

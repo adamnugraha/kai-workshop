@@ -1,9 +1,12 @@
-# Lets lab.sh change the simulated bank's behaviour from the VM.
+# Lets lab.sh change the simulated bank's behaviour. Behind the lab login, so
+# nobody else can switch the bank to "down" during a demo.
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: banksim
   namespace: bank
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: bank-lab-auth@kubernetescrd
 spec:
   ingressClassName: traefik
   rules:

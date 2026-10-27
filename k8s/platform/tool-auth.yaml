@@ -1,0 +1,44 @@
+# Login in front of the operator tools (Prometheus, Alertmanager, Jaeger,
+# Chaos Mesh, Argo Rollouts and the bank's admin API). lab.sh creates the
+# "lab-auth" secret in each namespace: user admin, password = the Grafana
+# admin password (./lab.sh info shows it). The two demo sites and Grafana do
+# not use it; Grafana has its own login.
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: lab-auth
+  namespace: observability
+spec:
+  basicAuth:
+    secret: lab-auth
+    realm: RelNusa lab
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: lab-auth
+  namespace: chaos-mesh
+spec:
+  basicAuth:
+    secret: lab-auth
+    realm: RelNusa lab
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: lab-auth
+  namespace: argo-rollouts
+spec:
+  basicAuth:
+    secret: lab-auth
+    realm: RelNusa lab
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: lab-auth
+  namespace: bank
+spec:
+  basicAuth:
+    secret: lab-auth
+    realm: RelNusa lab

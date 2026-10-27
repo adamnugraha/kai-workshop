@@ -16,7 +16,7 @@ spec:
   - name: sloth-slo-sli-recordings-relnusa-modern-ketersediaan
     rules:
     - expr: |
-        (sum(rate(traefik_router_requests_total{router=~"modern-app-.*",code=~"5.."}[5m])))
+        ((sum(rate(traefik_router_requests_total{router=~"modern-app-.*",code=~"5.."}[5m])) or vector(0)))
         /
         (sum(rate(traefik_router_requests_total{router=~"modern-app-.*"}[5m])))
       labels:
@@ -28,7 +28,7 @@ spec:
         team: relnusa
       record: slo:sli_error:ratio_rate5m
     - expr: |
-        (sum(rate(traefik_router_requests_total{router=~"modern-app-.*",code=~"5.."}[30m])))
+        ((sum(rate(traefik_router_requests_total{router=~"modern-app-.*",code=~"5.."}[30m])) or vector(0)))
         /
         (sum(rate(traefik_router_requests_total{router=~"modern-app-.*"}[30m])))
       labels:
@@ -40,7 +40,7 @@ spec:
         team: relnusa
       record: slo:sli_error:ratio_rate30m
     - expr: |
-        (sum(rate(traefik_router_requests_total{router=~"modern-app-.*",code=~"5.."}[1h])))
+        ((sum(rate(traefik_router_requests_total{router=~"modern-app-.*",code=~"5.."}[1h])) or vector(0)))
         /
         (sum(rate(traefik_router_requests_total{router=~"modern-app-.*"}[1h])))
       labels:
@@ -52,7 +52,7 @@ spec:
         team: relnusa
       record: slo:sli_error:ratio_rate1h
     - expr: |
-        (sum(rate(traefik_router_requests_total{router=~"modern-app-.*",code=~"5.."}[2h])))
+        ((sum(rate(traefik_router_requests_total{router=~"modern-app-.*",code=~"5.."}[2h])) or vector(0)))
         /
         (sum(rate(traefik_router_requests_total{router=~"modern-app-.*"}[2h])))
       labels:
@@ -64,7 +64,7 @@ spec:
         team: relnusa
       record: slo:sli_error:ratio_rate2h
     - expr: |
-        (sum(rate(traefik_router_requests_total{router=~"modern-app-.*",code=~"5.."}[6h])))
+        ((sum(rate(traefik_router_requests_total{router=~"modern-app-.*",code=~"5.."}[6h])) or vector(0)))
         /
         (sum(rate(traefik_router_requests_total{router=~"modern-app-.*"}[6h])))
       labels:
@@ -76,7 +76,7 @@ spec:
         team: relnusa
       record: slo:sli_error:ratio_rate6h
     - expr: |
-        (sum(rate(traefik_router_requests_total{router=~"modern-app-.*",code=~"5.."}[1d])))
+        ((sum(rate(traefik_router_requests_total{router=~"modern-app-.*",code=~"5.."}[1d])) or vector(0)))
         /
         (sum(rate(traefik_router_requests_total{router=~"modern-app-.*"}[1d])))
       labels:
@@ -88,7 +88,7 @@ spec:
         team: relnusa
       record: slo:sli_error:ratio_rate1d
     - expr: |
-        (sum(rate(traefik_router_requests_total{router=~"modern-app-.*",code=~"5.."}[3d])))
+        ((sum(rate(traefik_router_requests_total{router=~"modern-app-.*",code=~"5.."}[3d])) or vector(0)))
         /
         (sum(rate(traefik_router_requests_total{router=~"modern-app-.*"}[3d])))
       labels:
@@ -707,7 +707,7 @@ spec:
   - name: sloth-slo-sli-recordings-relnusa-legacy-ketersediaan
     rules:
     - expr: |
-        (sum(rate(traefik_router_requests_total{router=~"legacy-legacy-.*",code=~"5.."}[5m])))
+        ((sum(rate(traefik_router_requests_total{router=~"legacy-legacy-.*",code=~"5.."}[5m])) or vector(0)))
         /
         (sum(rate(traefik_router_requests_total{router=~"legacy-legacy-.*"}[5m])))
       labels:
@@ -719,7 +719,7 @@ spec:
         team: relnusa
       record: slo:sli_error:ratio_rate5m
     - expr: |
-        (sum(rate(traefik_router_requests_total{router=~"legacy-legacy-.*",code=~"5.."}[30m])))
+        ((sum(rate(traefik_router_requests_total{router=~"legacy-legacy-.*",code=~"5.."}[30m])) or vector(0)))
         /
         (sum(rate(traefik_router_requests_total{router=~"legacy-legacy-.*"}[30m])))
       labels:
@@ -731,7 +731,7 @@ spec:
         team: relnusa
       record: slo:sli_error:ratio_rate30m
     - expr: |
-        (sum(rate(traefik_router_requests_total{router=~"legacy-legacy-.*",code=~"5.."}[1h])))
+        ((sum(rate(traefik_router_requests_total{router=~"legacy-legacy-.*",code=~"5.."}[1h])) or vector(0)))
         /
         (sum(rate(traefik_router_requests_total{router=~"legacy-legacy-.*"}[1h])))
       labels:
@@ -743,7 +743,7 @@ spec:
         team: relnusa
       record: slo:sli_error:ratio_rate1h
     - expr: |
-        (sum(rate(traefik_router_requests_total{router=~"legacy-legacy-.*",code=~"5.."}[2h])))
+        ((sum(rate(traefik_router_requests_total{router=~"legacy-legacy-.*",code=~"5.."}[2h])) or vector(0)))
         /
         (sum(rate(traefik_router_requests_total{router=~"legacy-legacy-.*"}[2h])))
       labels:
@@ -755,7 +755,7 @@ spec:
         team: relnusa
       record: slo:sli_error:ratio_rate2h
     - expr: |
-        (sum(rate(traefik_router_requests_total{router=~"legacy-legacy-.*",code=~"5.."}[6h])))
+        ((sum(rate(traefik_router_requests_total{router=~"legacy-legacy-.*",code=~"5.."}[6h])) or vector(0)))
         /
         (sum(rate(traefik_router_requests_total{router=~"legacy-legacy-.*"}[6h])))
       labels:
@@ -767,7 +767,7 @@ spec:
         team: relnusa
       record: slo:sli_error:ratio_rate6h
     - expr: |
-        (sum(rate(traefik_router_requests_total{router=~"legacy-legacy-.*",code=~"5.."}[1d])))
+        ((sum(rate(traefik_router_requests_total{router=~"legacy-legacy-.*",code=~"5.."}[1d])) or vector(0)))
         /
         (sum(rate(traefik_router_requests_total{router=~"legacy-legacy-.*"}[1d])))
       labels:
@@ -779,7 +779,7 @@ spec:
         team: relnusa
       record: slo:sli_error:ratio_rate1d
     - expr: |
-        (sum(rate(traefik_router_requests_total{router=~"legacy-legacy-.*",code=~"5.."}[3d])))
+        ((sum(rate(traefik_router_requests_total{router=~"legacy-legacy-.*",code=~"5.."}[3d])) or vector(0)))
         /
         (sum(rate(traefik_router_requests_total{router=~"legacy-legacy-.*"}[3d])))
       labels:

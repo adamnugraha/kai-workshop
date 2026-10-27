@@ -36,8 +36,11 @@ spec:
           imagePullPolicy: IfNotPresent
           args: ["gateway"]
           env:
-            - {name: SEARCH_URL, value: "http://search"}
-            - {name: BOOKING_URL, value: "http://booking"}
+            # Full names: a short name could fall through to outside DNS while
+            # cluster DNS is still starting, and a keep-alive connection would
+            # then stick to the wrong address.
+            - {name: SEARCH_URL, value: "http://search.modern.svc.cluster.local"}
+            - {name: BOOKING_URL, value: "http://booking.modern.svc.cluster.local"}
             - {name: ADMIT_RATE, value: "60"}
             - {name: ADMIT_BURST, value: "30"}
             - {name: UPSTREAM_TIMEOUT_MS, value: "5000"}
@@ -159,7 +162,7 @@ spec:
             - {name: DB_PASSWORD, valueFrom: {secretKeyRef: {name: relnusa-db-app, key: password}}}
             - {name: DB_MAX_CONNS, value: "20"}
             - {name: REDIS_ADDR, value: "redis:6379"}
-            - {name: BANK_URL, value: "http://banksim.bank:8080"}
+            - {name: BANK_URL, value: "http://banksim.bank.svc.cluster.local:8080"}
             - {name: BANK_TIMEOUT_MS, value: "800"}
             - {name: WORKER_CONCURRENCY, value: "16"}
             - {name: BREAKER_OPEN_MS, value: "10000"}

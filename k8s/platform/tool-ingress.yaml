@@ -1,10 +1,13 @@
-# Host names for the tools. Open them through the SSH tunnel, for example
-# http://jaeger.localhost:8080 . __LAB_DOMAIN__ is filled in by lab.sh.
+# Host names for the operator tools, for example http://jaeger.<domain>.
+# __LAB_DOMAIN__ is filled in by lab.sh. Each one asks for the lab login
+# (middleware in tool-auth.yaml).
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: jaeger
   namespace: observability
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: observability-lab-auth@kubernetescrd
 spec:
   ingressClassName: traefik
   rules:
@@ -21,6 +24,8 @@ kind: Ingress
 metadata:
   name: chaos-dashboard
   namespace: chaos-mesh
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: chaos-mesh-lab-auth@kubernetescrd
 spec:
   ingressClassName: traefik
   rules:
@@ -37,6 +42,8 @@ kind: Ingress
 metadata:
   name: rollouts-dashboard
   namespace: argo-rollouts
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: argo-rollouts-lab-auth@kubernetescrd
 spec:
   ingressClassName: traefik
   rules:

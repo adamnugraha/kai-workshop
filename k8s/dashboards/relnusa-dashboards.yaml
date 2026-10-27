@@ -54,7 +54,7 @@ data:
        },
        "options": {
         "mode": "markdown",
-        "content": "\n**Aplikasi pemesanan tiket kereta fiktif** dalam dua arsitektur, untuk sesi *Mencapai ketersediaan 99,9% ke atas*.\n\n| Buka | Alamat (lewat SSH tunnel) |\n|---|---|\n| Aplikasi lama (satu server) | [legacy.localhost:8080](http://legacy.localhost:8080) |\n| Aplikasi modern | [app.localhost:8080](http://app.localhost:8080) |\n| Trace (Jaeger) | [jaeger.localhost:8080](http://jaeger.localhost:8080) |\n| Eksperimen kegagalan (Chaos Mesh) | [chaos.localhost:8080](http://chaos.localhost:8080) |\n| Rilis bertahap (Argo Rollouts) | [rollouts.localhost:8080](http://rollouts.localhost:8080/rollouts/modern) |\n\n**Dasbor:** [1 · Sebelum vs sesudah](/d/relnusa-1) · [2 · SLO dan error budget](/d/relnusa-2) · [3 · Di dalam arsitektur modern](/d/relnusa-3)\n"
+        "content": "\n**Aplikasi pemesanan tiket kereta fiktif** dalam dua arsitektur, untuk sesi *Mencapai ketersediaan 99,9% ke atas*.\n\n| Buka | Alamat |\n|---|---|\n| Aplikasi lama (satu server) | [legacy.__LAB_DOMAIN____URL_PORT__](http://legacy.__LAB_DOMAIN____URL_PORT__) |\n| Aplikasi modern | [app.__LAB_DOMAIN____URL_PORT__](http://app.__LAB_DOMAIN____URL_PORT__) |\n| Trace (Jaeger) | [jaeger.__LAB_DOMAIN____URL_PORT__](http://jaeger.__LAB_DOMAIN____URL_PORT__) |\n| Eksperimen kegagalan (Chaos Mesh) | [chaos.__LAB_DOMAIN____URL_PORT__](http://chaos.__LAB_DOMAIN____URL_PORT__) |\n| Rilis bertahap (Argo Rollouts) | [rollouts.__LAB_DOMAIN____URL_PORT__](http://rollouts.__LAB_DOMAIN____URL_PORT__/rollouts/modern) |\n\n**Dasbor:** [1 · Sebelum vs sesudah](/d/relnusa-1) · [2 · SLO dan error budget](/d/relnusa-2) · [3 · Di dalam arsitektur modern](/d/relnusa-3)\n"
        }
       },
       {

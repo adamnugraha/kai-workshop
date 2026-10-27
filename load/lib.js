@@ -1,16 +1,19 @@
 // Shared helpers for the k6 scripts.
 import http from 'k6/http';
 
-// The lab exposes every site on 127.0.0.1 (port HTTP_PORT, default 80) with a different host name.
+// The lab serves every site on this machine (port HTTP_PORT, default 80) under
+// its own host name, <site>.<LAB_DOMAIN>. The load tests always connect to
+// 127.0.0.1, even when the names point at a public IP.
+const domain = __ENV.LAB_DOMAIN || 'localhost';
 export const hosts = {
-  'app.localhost': '127.0.0.1',
-  'legacy.localhost': '127.0.0.1',
+  [`app.${domain}`]: '127.0.0.1',
+  [`legacy.${domain}`]: '127.0.0.1',
 };
 
 export function baseUrl(target) {
   if (__ENV.BASE_URL) return __ENV.BASE_URL;
   const port = __ENV.HTTP_PORT && __ENV.HTTP_PORT !== '80' ? `:${__ENV.HTTP_PORT}` : '';
-  return target === 'legacy' ? `http://legacy.localhost${port}` : `http://app.localhost${port}`;
+  return `http://${target === 'legacy' ? 'legacy' : 'app'}.${domain}${port}`;
 }
 
 export function uuid() {

@@ -82,7 +82,7 @@ spec:
           args: ["monolith"]
           env:
             - {name: DATABASE_URL, value: "postgres://relnusa:relnusa@legacy-db:5432/relnusa?sslmode=disable"}
-            - {name: BANK_URL, value: "http://banksim.bank:8080"}
+            - {name: BANK_URL, value: "http://banksim.bank.svc.cluster.local:8080"}
             - {name: DB_MAX_CONNS, value: "20"}
             - {name: SEARCH_DB_COST_MS, value: "25"}
             - {name: WARMUP_MS, value: "12000"}

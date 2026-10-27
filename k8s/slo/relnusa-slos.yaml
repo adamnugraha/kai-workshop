@@ -21,7 +21,7 @@ spec:
       description: "Permintaan penumpang yang dijawab tanpa error server (5xx) di pintu masuk."
       sli:
         events:
-          errorQuery: sum(rate(traefik_router_requests_total{router=~"modern-app-.*",code=~"5.."}[{{.window}}]))
+          errorQuery: (sum(rate(traefik_router_requests_total{router=~"modern-app-.*",code=~"5.."}[{{.window}}])) or vector(0))
           totalQuery: sum(rate(traefik_router_requests_total{router=~"modern-app-.*"}[{{.window}}]))
       alerting:
         name: RelnusaModernKetersediaan
@@ -100,7 +100,7 @@ spec:
       description: "Permintaan penumpang yang dijawab tanpa error server (5xx) di pintu masuk."
       sli:
         events:
-          errorQuery: sum(rate(traefik_router_requests_total{router=~"legacy-legacy-.*",code=~"5.."}[{{.window}}]))
+          errorQuery: (sum(rate(traefik_router_requests_total{router=~"legacy-legacy-.*",code=~"5.."}[{{.window}}])) or vector(0))
           totalQuery: sum(rate(traefik_router_requests_total{router=~"legacy-legacy-.*"}[{{.window}}]))
       alerting:
         name: RelnusaLegacyKetersediaan

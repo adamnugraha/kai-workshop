@@ -7,7 +7,7 @@ controllerManager:
   nodeSelector:
     node-role.kubernetes.io/control-plane: "true"
 dashboard:
-  # The dashboard is reachable only through the SSH tunnel, so the token
+  # The ingress puts the lab login in front of the dashboard, so its own token
   # login is switched off to keep the live demo simple.
   securityMode: false
   persistentVolume:

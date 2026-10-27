@@ -199,13 +199,13 @@ def d00():
     p.append(text(lay, "Lab ketersediaan RelNusa", """
 **Aplikasi pemesanan tiket kereta fiktif** dalam dua arsitektur, untuk sesi *Mencapai ketersediaan 99,9% ke atas*.
 
-| Buka | Alamat (lewat SSH tunnel) |
+| Buka | Alamat |
 |---|---|
-| Aplikasi lama (satu server) | [legacy.localhost:8080](http://legacy.localhost:8080) |
-| Aplikasi modern | [app.localhost:8080](http://app.localhost:8080) |
-| Trace (Jaeger) | [jaeger.localhost:8080](http://jaeger.localhost:8080) |
-| Eksperimen kegagalan (Chaos Mesh) | [chaos.localhost:8080](http://chaos.localhost:8080) |
-| Rilis bertahap (Argo Rollouts) | [rollouts.localhost:8080](http://rollouts.localhost:8080/rollouts/modern) |
+| Aplikasi lama (satu server) | [legacy.__LAB_DOMAIN____URL_PORT__](http://legacy.__LAB_DOMAIN____URL_PORT__) |
+| Aplikasi modern | [app.__LAB_DOMAIN____URL_PORT__](http://app.__LAB_DOMAIN____URL_PORT__) |
+| Trace (Jaeger) | [jaeger.__LAB_DOMAIN____URL_PORT__](http://jaeger.__LAB_DOMAIN____URL_PORT__) |
+| Eksperimen kegagalan (Chaos Mesh) | [chaos.__LAB_DOMAIN____URL_PORT__](http://chaos.__LAB_DOMAIN____URL_PORT__) |
+| Rilis bertahap (Argo Rollouts) | [rollouts.__LAB_DOMAIN____URL_PORT__](http://rollouts.__LAB_DOMAIN____URL_PORT__/rollouts/modern) |
 
 **Dasbor:** [1 · Sebelum vs sesudah](/d/relnusa-1) · [2 · SLO dan error budget](/d/relnusa-2) · [3 · Di dalam arsitektur modern](/d/relnusa-3)
 """, w=14, h=9))

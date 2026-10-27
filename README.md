@@ -49,44 +49,52 @@ Lab berjalan di Kubernetes ringan (k3s di dalam Docker lewat k3d) dengan tiga no
 
 - Satu VM Ubuntu 22.04 atau 24.04, 8 vCPU, 32 GB RAM, disk 100 GB (minimum 4 vCPU dan 16 GB untuk profil `small`)
 - Akses internet keluar ke Docker Hub, GitHub, ghcr.io, quay.io dan registry.k8s.io
-- Akses masuk cukup SSH. Semua antarmuka web hanya terbuka di 127.0.0.1 pada VM dan dibuka dari laptop lewat SSH tunnel
-- Port 80 dan 9090 di 127.0.0.1 harus kosong; bila sudah terpakai, ubah `HTTP_PORT` dan `PROM_PORT` di `lab.env` sebelum memasang
+- Akses masuk: SSH, ditambah TCP 80 bila lab dibuka lewat IP publik (mode `public`, bawaan untuk VM di cloud)
+- Port 80 (dan 9090 di 127.0.0.1) harus kosong; bila sudah terpakai, ubah `HTTP_PORT` dan `PROM_PORT` di `lab.env` sebelum memasang
 
 Panduan langkah demi langkah: [AWS](docs/aws-setup.md), [Google Cloud](docs/gcp-setup.md), [server sendiri](docs/server-setup.md), dan [peringatan Telegram](docs/telegram-setup.md).
 
 ## Cara memasang
 
-```bash
-git clone https://github.com/adamnugraha/kai-workshop.git
-cd kai-workshop
-sudo ./lab.sh install-deps     # Docker, k3d, kubectl, helm, plugin kubectl
-cp lab.env.example lab.env     # opsional: token Telegram, profil small
-./lab.sh up                    # 15 sampai 25 menit pada pemasangan pertama
-./lab.sh info                  # alamat, kata sandi Grafana, perintah SSH tunnel
-```
-
-Atau sekaligus dari VM baru:
+Sekaligus dari VM baru (dipakai juga sebagai *user data* di AWS atau *startup script* di GCP):
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/adamnugraha/kai-workshop/main/bootstrap.sh | sudo bash
 ```
 
-## Cara mengakses dari laptop
+Atau langkah demi langkah:
 
 ```bash
-ssh -N -L 8080:127.0.0.1:80 -L 9090:127.0.0.1:9090 ubuntu@ALAMAT-VM
+git clone https://github.com/adamnugraha/kai-workshop.git
+cd kai-workshop
+cp lab.env.example lab.env     # pilih LAB_ACCESS, token Telegram, profil small
+sudo ./lab.sh install-deps     # Docker, k3d, kubectl, helm, plugin kubectl
+./lab.sh up                    # 15 sampai 25 menit pada pemasangan pertama
+./lab.sh info                  # alamat dan kata sandi
 ```
 
-Lalu buka di Chrome atau Edge (keduanya mengenali `*.localhost` tanpa pengaturan DNS):
+## Cara mengakses
 
-| Alamat | Isi |
-|---|---|
-| http://legacy.localhost:8080 | Situs sistem lama |
-| http://app.localhost:8080 | Situs sistem modern |
-| http://grafana.localhost:8080 | Dasbor (masuk sebagai admin, kata sandi dari `./lab.sh info`) |
-| http://jaeger.localhost:8080 | Trace permintaan |
-| http://chaos.localhost:8080 | Eksperimen kegagalan |
-| http://rollouts.localhost:8080 | Rilis bertahap |
+Ada dua mode, dipilih dengan `LAB_ACCESS` di `lab.env` sebelum `./lab.sh up`.
+
+**Mode `public`** (bawaan untuk pemasangan lewat `bootstrap.sh`): semua alamat memakai IP publik VM melalui layanan DNS gratis [sslip.io](https://sslip.io), jadi tidak perlu mengatur DNS atau SSH tunnel. Buka TCP 80 di firewall.
+
+| Alamat | Isi | Login |
+|---|---|---|
+| `http://legacy.<ip>.sslip.io` | Situs sistem lama | Tidak perlu |
+| `http://app.<ip>.sslip.io` | Situs sistem modern | Tidak perlu |
+| `http://grafana.<ip>.sslip.io` | Dasbor | Melihat tanpa login; mengubah sebagai `admin` |
+| `http://jaeger.<ip>.sslip.io`, `chaos.`, `rollouts.`, `prometheus.`, `alertmanager.` | Alat operator | `admin` dan kata sandi dari `./lab.sh info` |
+
+Alamat persisnya ditampilkan oleh `./lab.sh info`. Bila IP berubah setelah VM dimatikan dan dinyalakan, nama-nama itu ikut berubah dengan sendirinya. Untuk alamat yang tetap, pakai Elastic IP (AWS) atau IP statis (GCP), atau domain sendiri lewat `LAB_DOMAIN`.
+
+**Mode `tunnel`**: semua hanya terbuka di 127.0.0.1 pada VM, cocok untuk server tanpa IP publik. Dari laptop:
+
+```bash
+ssh -N -L 8080:127.0.0.1:80 ubuntu@ALAMAT-VM
+```
+
+Lalu buka `http://app.localhost:8080`, `http://grafana.localhost:8080` dan seterusnya di Chrome atau Edge (keduanya mengenali `*.localhost` tanpa pengaturan DNS).
 
 ## Skenario demo
 
@@ -148,7 +156,7 @@ lab.sh          satu pintu untuk memasang dan menjalankan demo
 
 ## Catatan
 
-- Lab dibuat untuk pelatihan. Konfigurasi keamanan sengaja disederhanakan (misalnya dasbor Chaos Mesh tanpa login), karena seluruh antarmuka hanya bisa dibuka lewat SSH tunnel.
+- Lab dibuat untuk pelatihan. Di mode `public` lalu lintas memakai HTTP biasa tanpa enkripsi; alat operator dilindungi login sederhana, dan tidak ada data nyata di dalam lab. Hapus VM setelah acara.
 - Angka kinerja di lab bergantung pada ukuran VM dan tidak bisa langsung dibandingkan dengan sistem produksi mana pun.
 
 ## Lisensi

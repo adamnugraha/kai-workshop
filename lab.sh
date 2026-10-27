@@ -17,7 +17,17 @@ mkdir -p "$STATE"
 if [ -f "$ROOT/lab.env" ]; then set -a; . "$ROOT/lab.env"; set +a; fi
 
 CLUSTER="${CLUSTER:-relnusa}"
-LAB_DOMAIN="${LAB_DOMAIN:-localhost}"
+# How people reach the lab:
+#   public  http://app.<public-ip>.sslip.io and so on; port 80 is open to the
+#           internet and the operator tools ask for a login
+#   tunnel  everything stays on 127.0.0.1 and is opened over an SSH tunnel
+LAB_ACCESS="${LAB_ACCESS:-tunnel}"
+case "$LAB_ACCESS" in public|tunnel) ;; *) echo "LAB_ACCESS must be public or tunnel" >&2; exit 1;; esac
+if [ "$LAB_ACCESS" = public ]; then LAB_BIND=0.0.0.0; else LAB_BIND=127.0.0.1; fi
+# Optional: your own wildcard DNS name (*.lab.example.com -> this machine)
+# instead of <ip>.sslip.io, and an override for the detected public IP.
+LAB_DOMAIN_FIXED="${LAB_DOMAIN:-}"
+LAB_DNS_SUFFIX="${LAB_DNS_SUFFIX:-sslip.io}"
 LAB_PROFILE="${LAB_PROFILE:-full}"
 K3S_IMAGE="${K3S_IMAGE:-rancher/k3s:v1.36.5-k3s1}"
 K6_IMAGE="${K6_IMAGE:-grafana/k6:1.8.1}"
@@ -31,8 +41,8 @@ CNPG_CHART_VERSION="${CNPG_CHART_VERSION:-0.29.1}"
 ROLLOUTS_CHART_VERSION="${ROLLOUTS_CHART_VERSION:-2.43.2}"
 CHAOS_CHART_VERSION="${CHAOS_CHART_VERSION:-2.8.4}"
 TRAFFIC_RATE="${TRAFFIC_RATE:-4}"
-# Host ports on 127.0.0.1 (change them if the server already uses 80 or 9090;
-# they are fixed when the cluster is created)
+# Host ports (change them if the server already uses 80 or 9090; they are
+# fixed when the cluster is created). Prometheus always stays on 127.0.0.1.
 HTTP_PORT="${HTTP_PORT:-80}"
 PROM_PORT="${PROM_PORT:-9090}"
 DOCKER_BUILD_FLAGS="${DOCKER_BUILD_FLAGS:-}"
@@ -47,6 +57,49 @@ die()    { printf '\033[1;31mERROR\033[0m %s\n' "$*" >&2; exit 1; }
 need()   { command -v "$1" >/dev/null 2>&1 || die "'$1' is not installed. Run: sudo ./lab.sh install-deps"; }
 
 arch() { case "$(uname -m)" in x86_64|amd64) echo amd64;; aarch64|arm64) echo arm64;; *) die "unsupported CPU $(uname -m)";; esac; }
+
+# ---------------------------------------------------------------- access
+public_ip() {
+  # This machine's public IPv4: cloud metadata first, then an echo service.
+  local ip="${LAB_PUBLIC_IP:-}" tok
+  if [ -z "$ip" ]; then   # AWS (IMDSv2)
+    tok="$(curl -fsS -m 2 -X PUT -H 'X-aws-ec2-metadata-token-ttl-seconds: 60' http://169.254.169.254/latest/api/token 2>/dev/null || true)"
+    if [ -n "$tok" ]; then ip="$(curl -fsS -m 2 -H "X-aws-ec2-metadata-token: $tok" http://169.254.169.254/latest/meta-data/public-ipv4 2>/dev/null || true)"; fi
+  fi
+  if [ -z "$ip" ]; then   # Google Cloud
+    ip="$(curl -fsS -m 2 -H 'Metadata-Flavor: Google' http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/access-configs/0/external-ip 2>/dev/null || true)"
+  fi
+  if [ -z "$ip" ]; then   # any other server
+    ip="$(curl -fsS -m 5 https://checkip.amazonaws.com 2>/dev/null | tr -d '[:space:]' || true)"
+  fi
+  [[ "$ip" =~ ^[0-9]{1,3}(\.[0-9]{1,3}){3}$ ]] || return 1
+  echo "$ip"
+}
+
+desired_domain() {
+  # The domain the lab should use now, from lab.env and the current public IP.
+  if [ -n "$LAB_DOMAIN_FIXED" ]; then echo "$LAB_DOMAIN_FIXED"
+  elif [ "$LAB_ACCESS" = public ]; then
+    local ip; ip="$(public_ip)" || die "could not find this machine's public IP; set LAB_PUBLIC_IP (or LAB_DOMAIN) in lab.env"
+    echo "$ip.$LAB_DNS_SUFFIX"
+  else echo localhost
+  fi
+}
+
+# Commands use the domain the cluster was set up with ("./lab.sh update-ip"
+# applies a new one). Before the first install it is worked out from lab.env.
+LAB_DOMAIN=""
+ensure_domain() {
+  [ -n "$LAB_DOMAIN" ] && return 0
+  if [ -s "$STATE/applied-domain" ]; then LAB_DOMAIN="$(cat "$STATE/applied-domain")"; else LAB_DOMAIN="$(desired_domain)"; fi
+}
+
+site_port() {
+  # The port people type in the browser: the tunnel's 8080, or HTTP_PORT.
+  if [ "$LAB_ACCESS" = tunnel ]; then echo ":8080"; elif [ "$HTTP_PORT" != 80 ]; then echo ":$HTTP_PORT"; fi
+}
+site_url() { echo "http://$1.$LAB_DOMAIN$(site_port)"; }
+lab_curl() { curl -fsS -u "admin:$(grafana_password)" -H "Host: $1.$LAB_DOMAIN" "${@:3}" "http://127.0.0.1:$HTTP_PORT$2"; }
 
 grafana_password() {
   if [ -n "${GRAFANA_PASSWORD:-}" ]; then echo "$GRAFANA_PASSWORD"; return; fi
@@ -67,6 +120,7 @@ render() {
   # render FILE [APP_VERSION] [FAULT_ERROR_RATE]
   sed -e "s|__IMAGE__|$(cat "$STATE/image")|g" \
       -e "s|__LAB_DOMAIN__|$LAB_DOMAIN|g" \
+      -e "s|__URL_PORT__|$(site_port)|g" \
       -e "s|__DB_INSTANCES__|$DB_INSTANCES|g" \
       -e "s|__SEARCH_DB_HOST__|$SEARCH_DB_HOST|g" \
       -e "s|__APP_VERSION__|${2:-v1}|g" \
@@ -83,7 +137,7 @@ cmd_install_deps() {
   if command -v apt-get >/dev/null; then
     export DEBIAN_FRONTEND=noninteractive
     apt-get update -q
-    apt-get install -y -q curl ca-certificates git jq tar gzip >/dev/null
+    apt-get install -y -q curl ca-certificates git jq tar gzip openssl >/dev/null
     apt-get install -y -q "linux-modules-extra-$(uname -r)" >/dev/null 2>&1 || c_warn "linux-modules-extra not available (network fault injection may be limited)"
   fi
   if ! command -v docker >/dev/null; then
@@ -127,8 +181,12 @@ metadata:
 servers: 1
 agents: 2
 image: $K3S_IMAGE
+kubeAPI:
+  # The Kubernetes API stays on this machine only, also in public mode.
+  hostIP: "127.0.0.1"
+  hostPort: "6550"
 ports:
-  - port: 127.0.0.1:$HTTP_PORT:80
+  - port: $LAB_BIND:$HTTP_PORT:80
     nodeFilters: [server:0:direct]
   - port: 127.0.0.1:$PROM_PORT:30090
     nodeFilters: [server:0:direct]
@@ -245,10 +303,21 @@ create_cluster() {
     write_k3d_config
     c_info "Creating 3-node Kubernetes cluster (1 control plane + 2 workers)"
     k3d cluster create --config "$STATE/k3d.yaml"
+    echo "$LAB_BIND" >"$STATE/bind"
   fi
+  check_bind
   kubectl config use-context "k3d-$CLUSTER" >/dev/null
   kubectl apply -f "$ROOT/k8s/cluster/traefik-config.yaml" >/dev/null
   pin_system_pods
+}
+
+check_bind() {
+  # The listening address is fixed when the cluster is created.
+  local made; made="$(cat "$STATE/bind" 2>/dev/null || echo 127.0.0.1)"
+  if [ "$made" != "$LAB_BIND" ]; then
+    c_warn "the cluster listens on $made, but LAB_ACCESS=$LAB_ACCESS needs $LAB_BIND."
+    c_warn "recreate it to switch (about 10 minutes, images are kept): ./lab.sh down && ./lab.sh up"
+  fi
 }
 
 pin_system_pods() {
@@ -367,7 +436,9 @@ deploy_apps() {
   if ! kubectl -n modern get rollout booking >/dev/null 2>&1; then
     render "$ROOT/k8s/apps/booking-rollout.tpl.yaml" v1 0 | kubectl apply -f - >/dev/null
   fi
+  apply_tool_auth
   apply_observability_content
+  echo "$LAB_DOMAIN" >"$STATE/applied-domain"
   c_info "Waiting for all services to be ready"
   kubectl -n bank rollout status deploy/banksim --timeout=300s >/dev/null
   kubectl -n legacy rollout status deploy/legacy-db --timeout=300s >/dev/null
@@ -381,10 +452,56 @@ deploy_apps() {
 }
 
 apply_observability_content() {
-  local d
-  for d in "$ROOT/k8s/slo/rules" "$ROOT/k8s/dashboards"; do
-    if ls "$d"/*.yaml >/dev/null 2>&1; then kubectl apply -f "$d/" >/dev/null; fi
+  local f
+  for f in "$ROOT"/k8s/slo/rules/*.yaml "$ROOT"/k8s/dashboards/*.yaml; do
+    [ -f "$f" ] && render "$f" | kubectl apply -f - >/dev/null
   done
+  return 0
+}
+
+apply_tool_auth() {
+  # One login (admin and the Grafana password) in front of the operator
+  # tools: Prometheus, Alertmanager, Jaeger, Chaos Mesh, Argo Rollouts and the
+  # bank's admin API. Grafana has its own login; the two sites stay open.
+  local users ns
+  users="admin:$(openssl passwd -apr1 "$(grafana_password)")"
+  for ns in observability chaos-mesh argo-rollouts bank; do
+    kubectl -n "$ns" create secret generic lab-auth --from-literal=users="$users" --dry-run=client -o yaml |
+      kubectl apply -f - >/dev/null
+  done
+  kubectl apply -f "$ROOT/k8s/platform/tool-auth.yaml" >/dev/null
+}
+
+apply_hostnames() {
+  # Re-apply everything that carries a host name, after the domain changed.
+  helm_repos
+  render "$ROOT/k8s/platform/kps-values.yaml" >"$STATE/kps-values.yaml"
+  chmod 600 "$STATE/kps-values.yaml"
+  helm upgrade kps prometheus-community/kube-prometheus-stack -n observability --version "$KPS_CHART_VERSION" \
+    -f "$STATE/kps-values.yaml" -f "$(alertmanager_values)" --wait --timeout 10m >/dev/null
+  render "$ROOT/k8s/platform/tool-ingress.yaml" | kubectl apply -f - >/dev/null
+  render "$ROOT/k8s/apps/bank-ingress.yaml" | kubectl apply -f - >/dev/null
+  render "$ROOT/k8s/apps/legacy.yaml" | kubectl apply -f - >/dev/null
+  render "$ROOT/k8s/apps/modern.yaml" | kubectl apply -f - >/dev/null
+  apply_tool_auth
+  apply_observability_content
+  echo "$LAB_DOMAIN" >"$STATE/applied-domain"
+  if docker ps -a --filter name=relnusa-traffic --format '{{.Names}}' | grep relnusa-traffic >/dev/null; then cmd_traffic start; fi
+}
+
+cmd_update_ip() {
+  # Point every host name at the current public IP (or at LAB_DOMAIN).
+  local applied new
+  applied="$(cat "$STATE/applied-domain" 2>/dev/null || echo localhost)"
+  new="$(desired_domain)"
+  check_bind
+  if [ "$new" = "$applied" ] && kubectl -n bank get middlewares.traefik.io lab-auth >/dev/null 2>&1; then
+    c_ok "host names are up to date ($new)"; return 0
+  fi
+  c_info "Applying host names *.$new and the tools login (about 2 minutes)"
+  LAB_DOMAIN="$new"
+  apply_hostnames
+  c_ok "done. Addresses: ./lab.sh info"
 }
 
 roll_app_pods() {
@@ -427,7 +544,7 @@ Wants=network-online.target
 Type=oneshot
 RemainAfterExit=yes
 TimeoutStartSec=900
-ExecStart=$ROOT/lab.sh restart
+ExecStart=$ROOT/lab.sh boot
 
 [Install]
 WantedBy=multi-user.target
@@ -439,17 +556,57 @@ UNIT
   fi
 }
 
-cmd_restart() {
-  # Ordered restart: server first, then agents. Fixes nodes left NotReady.
-  cluster_exists || die "no cluster yet; run ./lab.sh up"
-  c_info "Restarting the cluster in order (about 2 minutes)"
-  k3d cluster stop "$CLUSTER" >/dev/null
-  k3d cluster start "$CLUSTER" >/dev/null
-  kubectl config use-context "k3d-$CLUSTER" >/dev/null
-  kubectl wait --for=condition=Ready nodes --all --timeout=300s >/dev/null || c_warn "not every node is ready yet"
+heal_nodes() {
+  # k3s on a node container can exit during start-up (for example while the
+  # control plane is still coming up) and does not try again by itself.
+  # Restart any node that stays NotReady.
+  local attempt t bad node
+  for t in $(seq 1 40); do kubectl get nodes >/dev/null 2>&1 && break; sleep 3; done
+  for attempt in 1 2 3; do
+    for t in $(seq 1 30); do
+      bad="$(kubectl get nodes --no-headers 2>/dev/null | awk '$2!="Ready"{print $1}')"
+      [ -z "$bad" ] && [ "$(kubectl get nodes --no-headers 2>/dev/null | wc -l)" -ge 3 ] && return 0
+      sleep 3
+    done
+    for node in $bad; do
+      c_warn "node $node is not ready; restarting it (attempt $attempt)"
+      docker restart -t 10 "$node" >/dev/null 2>&1 || true
+    done
+  done
+  return 1
+}
+
+after_start() {
+  # Shared tail of restart and boot.
   pin_system_pods
   docker start relnusa-traffic >/dev/null 2>&1 || true
+  if [ "$LAB_ACCESS" = public ] && [ -z "$LAB_DOMAIN_FIXED" ]; then
+    # A stopped and started VM usually gets a new public IP.
+    kubectl -n observability rollout status deploy/kps-grafana --timeout=300s >/dev/null 2>&1 || true
+    cmd_update_ip || c_warn "could not update the host names; run ./lab.sh update-ip"
+  fi
+}
+
+cmd_restart() {
+  # Stop and start the whole cluster, then heal any node that did not come back.
+  cluster_exists || die "no cluster yet; run ./lab.sh up"
+  c_info "Restarting the cluster (about 2 minutes)"
+  k3d cluster stop "$CLUSTER" >/dev/null 2>&1 || true
+  k3d cluster start "$CLUSTER" --timeout 180s >/dev/null 2>&1 || c_warn "k3d start did not finish cleanly; checking the nodes"
+  docker start "k3d-$CLUSTER-serverlb" >/dev/null 2>&1 || true
+  kubectl config use-context "k3d-$CLUSTER" >/dev/null
+  heal_nodes || c_warn "not every node is ready; check with: kubectl get nodes"
+  after_start
   c_ok "cluster restarted; pods need another minute or two (check with ./lab.sh preflight)"
+}
+
+cmd_boot() {
+  # Run by the boot service after a VM start. Docker has already started the
+  # node containers; only restart what did not come back.
+  cluster_exists || return 0
+  docker start "k3d-$CLUSTER-serverlb" "k3d-$CLUSTER-server-0" "k3d-$CLUSTER-agent-0" "k3d-$CLUSTER-agent-1" >/dev/null 2>&1 || true
+  kubectl config use-context "k3d-$CLUSTER" >/dev/null 2>&1 || true
+  if heal_nodes; then after_start; c_ok "cluster is up after boot"; else cmd_restart; fi
 }
 
 cmd_rebuild() {
@@ -470,7 +627,7 @@ k6_run() {
     -e K6_PROMETHEUS_RW_SERVER_URL="http://127.0.0.1:$PROM_PORT/api/v1/write" \
     -e K6_PROMETHEUS_RW_TREND_STATS="p(95),p(99),avg" \
     -e K6_PROMETHEUS_RW_PUSH_INTERVAL=5s \
-    -e HTTP_PORT="$HTTP_PORT" \
+    -e HTTP_PORT="$HTTP_PORT" -e LAB_DOMAIN="$LAB_DOMAIN" \
     $@
 }
 
@@ -481,7 +638,7 @@ cmd_traffic() {
       docker run -d --name relnusa-traffic --restart unless-stopped --network host \
         -v "$ROOT/load:/scripts:ro" \
         -e K6_PROMETHEUS_RW_SERVER_URL="http://127.0.0.1:$PROM_PORT/api/v1/write" \
-        -e HTTP_PORT="$HTTP_PORT" \
+        -e HTTP_PORT="$HTTP_PORT" -e LAB_DOMAIN="$LAB_DOMAIN" \
         -e K6_PROMETHEUS_RW_TREND_STATS="p(95),p(99),avg" \
         -e K6_PROMETHEUS_RW_PUSH_INTERVAL=5s \
         -e RATE="$TRAFFIC_RATE" \
@@ -501,7 +658,7 @@ cmd_spike() {
 }
 
 # ---------------------------------------------------------------- faults
-bank_api() { curl -fsS -X "$1" -H "Host: bank.$LAB_DOMAIN" "http://127.0.0.1:$HTTP_PORT/admin/config${2:-}"; echo; }
+bank_api() { lab_curl bank "/admin/config${2:-}" -X "$1"; echo; }
 
 cmd_bank() {
   case "${1:-status}" in
@@ -604,29 +761,52 @@ cmd_reset() {
 
 cmd_telegram_test() {
   local now; now="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-  curl -fsS -X POST -H "Host: alertmanager.$LAB_DOMAIN" -H 'Content-Type: application/json' \
-    "http://127.0.0.1:$HTTP_PORT/api/v2/alerts" -d "[{\"labels\":{\"alertname\":\"UjiNotifikasi\",\"sloth_service\":\"relnusa-modern\",\"sloth_slo\":\"uji\",\"severity\":\"info\"},\"annotations\":{\"title\":\"Uji jalur peringatan\",\"summary\":\"Jika pesan ini masuk, peringatan dari lab sudah sampai ke Telegram.\"},\"startsAt\":\"$now\"}]"
+  lab_curl alertmanager /api/v2/alerts -X POST -H 'Content-Type: application/json' -d "[{\"labels\":{\"alertname\":\"UjiNotifikasi\",\"sloth_service\":\"relnusa-modern\",\"sloth_slo\":\"uji\",\"severity\":\"info\"},\"annotations\":{\"title\":\"Uji jalur peringatan\",\"summary\":\"Jika pesan ini masuk, peringatan dari lab sudah sampai ke Telegram.\"},\"startsAt\":\"$now\"}]"
   c_ok "test alert sent to Alertmanager (arrives in Telegram within about 15 seconds if configured)"
 }
 
 cmd_info() {
-  local ip; ip="$(curl -fsS -m 3 https://checkip.amazonaws.com 2>/dev/null || hostname -I | awk '{print $1}')"
-  cat <<EOF
+  local pw; pw="$(grafana_password)"
+  echo
+  if [ "$LAB_ACCESS" = public ]; then
+    cat <<EOF
+RelNusa lab ($LAB_PROFILE profile), open from anywhere:
 
+  Legacy site       $(site_url legacy)
+  Modern site       $(site_url app)
+  Grafana           $(site_url grafana)   (view without login; edit as admin / $pw)
+
+Operator tools (login: admin / $pw):
+
+  Jaeger traces     $(site_url jaeger)
+  Chaos Mesh        $(site_url chaos)
+  Argo Rollouts     $(site_url rollouts)
+  Prometheus        $(site_url prometheus)
+  Alertmanager      $(site_url alertmanager)
+
+The firewall must allow TCP $HTTP_PORT from anywhere. If the IP changes after a
+restart, the names follow by themselves (or run ./lab.sh update-ip).
+EOF
+  else
+    local ip; ip="$(public_ip 2>/dev/null || hostname -I | awk '{print $1}')"
+    cat <<EOF
 RelNusa lab ($LAB_PROFILE profile). From your laptop, open an SSH tunnel:
 
-  ssh -N -L 8080:127.0.0.1:$HTTP_PORT -L 9090:127.0.0.1:$PROM_PORT <user>@$ip
+  ssh -N -L 8080:127.0.0.1:$HTTP_PORT <user>@$ip
 
 then browse (Chrome or Edge resolve *.localhost automatically):
 
-  Legacy site       http://legacy.$LAB_DOMAIN:8080
-  Modern site       http://app.$LAB_DOMAIN:8080
-  Grafana           http://grafana.$LAB_DOMAIN:8080   (admin / $(grafana_password))
-  Jaeger traces     http://jaeger.$LAB_DOMAIN:8080
-  Chaos Mesh        http://chaos.$LAB_DOMAIN:8080
-  Argo Rollouts     http://rollouts.$LAB_DOMAIN:8080
-  Prometheus        http://prometheus.$LAB_DOMAIN:8080
-  Alertmanager      http://alertmanager.$LAB_DOMAIN:8080
+  Legacy site       $(site_url legacy)
+  Modern site       $(site_url app)
+  Grafana           $(site_url grafana)   (view without login; edit as admin / $pw)
+  Jaeger traces     $(site_url jaeger)   (tools login: admin / $pw)
+  Chaos Mesh        $(site_url chaos)
+  Argo Rollouts     $(site_url rollouts)
+  Prometheus        $(site_url prometheus)
+  Alertmanager      $(site_url alertmanager)
+EOF
+  fi
+  cat <<EOF
 
 Telegram alerts: $([ -n "${TELEGRAM_BOT_TOKEN:-}" ] && echo "on (chat ${TELEGRAM_CHAT_ID:-?})" || echo "off (set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID in lab.env, then ./lab.sh alerts)")
 Demo commands: ./lab.sh help
@@ -673,9 +853,16 @@ cmd_preflight() {
   [ -z "$v" ] && c_ok "all pods running and ready" || fail "pods not ready: $(echo "$v" | tr '\n' ' ')"
 
   for h in legacy app grafana; do
-    v="$(curl -s -m 5 -o /dev/null -w '%{http_code}' -H "Host: $h.$LAB_DOMAIN" "http://127.0.0.1:$HTTP_PORT/" 2>/dev/null)"
-    [ "$v" = 200 ] || [ "$v" = 302 ] && c_ok "http://$h.$LAB_DOMAIN:8080 answers ($v)" || fail "http://$h.$LAB_DOMAIN:8080 answers $v"
+    v="$(curl -s -m 5 -o /dev/null -w '%{http_code}' -H "Host: $h.$LAB_DOMAIN" "http://127.0.0.1:$HTTP_PORT/" 2>/dev/null || true)"
+    [ "$v" = 200 ] || [ "$v" = 302 ] && c_ok "$(site_url "$h") answers ($v)" || fail "$(site_url "$h") answers $v"
   done
+  v="$(curl -s -m 5 -o /dev/null -w '%{http_code}' -H "Host: chaos.$LAB_DOMAIN" "http://127.0.0.1:$HTTP_PORT/" 2>/dev/null || true)"
+  [ "$v" = 401 ] && c_ok "operator tools ask for the login" || fail "$(site_url chaos) answered $v without a login (expected 401; run ./lab.sh update-ip)"
+  if [ "$LAB_ACCESS" = public ]; then
+    v="$(curl -s -m 8 -o /dev/null -w '%{http_code}' "$(site_url app)/" 2>/dev/null || true)"
+    if [ "$v" = 200 ]; then c_ok "reachable at its public address: $(site_url app)"
+    else c_warn "$(site_url app) did not answer from this machine (got '${v:-nothing}'). Check that the firewall allows TCP $HTTP_PORT from anywhere, then try it from your phone"; fi
+  fi
 
   v="$(kubectl -n modern get rollout booking -o jsonpath='{.status.phase} {.spec.template.spec.containers[0].env[?(@.name=="APP_VERSION")].value}' 2>/dev/null)"
   [ "$v" = "Healthy v1" ] && c_ok "booking release is v1 and healthy" || fail "booking release is '$v' (./lab.sh release undo)"
@@ -723,10 +910,11 @@ cmd_help() {
 Setup
   sudo ./lab.sh install-deps     install Docker, k3d, kubectl, helm, plugins
   ./lab.sh up                    build and start everything (15-25 minutes the first time)
-  ./lab.sh info                  URLs, password and the SSH tunnel command
+  ./lab.sh info                  addresses and the login
   ./lab.sh status                nodes, pods, database primary, traffic, bank mode
   ./lab.sh preflight             check everything before going on stage
   ./lab.sh restart               restart the cluster in order (nodes not ready after a reboot)
+  ./lab.sh update-ip             point the host names at a new public IP (done by restart too)
   ./lab.sh down                  delete the cluster
   ./lab.sh rebuild               rebuild the app image and roll the pods
   ./lab.sh alerts                re-apply alert routing after editing lab.env
@@ -759,10 +947,13 @@ EOF
 
 main() {
   local cmd="${1:-help}"; shift || true
+  case "$cmd" in help|-h|--help|install-deps) ;; *) ensure_domain;; esac
   case "$cmd" in
     install-deps) cmd_install_deps "$@";;
     up) cmd_up "$@";;
     restart) cmd_restart "$@";;
+    boot) cmd_boot "$@";;
+    update-ip) cmd_update_ip "$@";;
     down) cmd_down "$@";;
     rebuild) cmd_rebuild "$@";;
     info) cmd_info "$@";;

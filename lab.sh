@@ -114,10 +114,18 @@ site_port() {
 # http, or https once the certificates are trusted (detect_scheme sets it).
 URL_SCHEME=http
 site_url() { echo "$URL_SCHEME://$1.$LAB_DOMAIN$(site_port)"; }
+https_on() {
+  # HTTPS needs host names that Let's Encrypt can reach from the internet, so
+  # not the sslip.io names of a private address (a VM on an office network).
+  [ "$LAB_HTTPS" = on ] || return 1
+  case "$LAB_DOMAIN" in
+    10.*|127.*|192.168.*|172.1[6-9].*|172.2[0-9].*|172.3[01].*|100.6[4-9].*|100.[7-9][0-9].*|100.1[01][0-9].*|100.12[0-7].*) return 1;;
+  esac
+}
 https_valid() {
   # True when https://<site>.<domain> on this machine presents a certificate
   # that browsers trust, checked against the system's CA list.
-  [ "$LAB_HTTPS" = on ] || return 1
+  https_on || return 1
   curl -sS -m 5 --noproxy '*' -o /dev/null --resolve "${1:-app}.$LAB_DOMAIN:443:127.0.0.1" "https://${1:-app}.$LAB_DOMAIN/" 2>/dev/null
 }
 detect_scheme() { if https_valid app; then URL_SCHEME=https; else URL_SCHEME=http; fi; }
@@ -287,7 +295,7 @@ EOF
 
 https_port_yaml() {
   # Port 443 comes straight from the control-plane node, like port 80.
-  [ "$LAB_HTTPS" = on ] || return 0
+  https_on || return 0
   if port_in_use 443; then
     c_warn "port 443 is already used on this machine, so HTTPS stays off (plain HTTP works)" >&2
     return 0
@@ -356,7 +364,7 @@ create_cluster() {
 traefik_config() {
   # Settings for the Traefik ingress that ships with k3s, plus HTTPS when on.
   cat "$ROOT/k8s/cluster/traefik-config.yaml"
-  [ "$LAB_HTTPS" = on ] || return 0
+  https_on || return 0
   {
     cat <<EOF
 # HTTPS: each lab host name gets a Let's Encrypt certificate, checked over
@@ -408,7 +416,7 @@ https_port_direct() { docker port "k3d-$CLUSTER-server-0" 443/tcp >/dev/null 2>&
 ensure_https_port() {
   # Clusters created before HTTPS support do not publish port 443. Instead of
   # rebuilding them, a small TCP forwarder container publishes it.
-  if [ "$LAB_HTTPS" != on ] || https_port_direct; then
+  if ! https_on || https_port_direct; then
     docker rm -f relnusa-https >/dev/null 2>&1 || true
     return 0
   fi
@@ -450,7 +458,7 @@ EOF
 
 wait_https() {
   # Let's Encrypt usually answers within a minute of the host names appearing.
-  [ "$LAB_HTTPS" = on ] || return 0
+  https_on || return 0
   c_info "Waiting for the Let's Encrypt certificates (up to 4 minutes)"
   local t=0
   until https_valid app && https_valid grafana; do
@@ -677,7 +685,7 @@ cmd_apply() {
   c_info "Host names *.$LAB_DOMAIN, tools login and dashboards (about 2 minutes)"
   apply_hostnames
   # After the host names, so certificates are only requested for current ones.
-  c_info "Ingress settings$([ "$LAB_HTTPS" = on ] && echo " and HTTPS")"
+  c_info "Ingress settings$(https_on && echo " and HTTPS")"
   apply_traefik_config
   ensure_https_port
   install_boot_service
@@ -973,7 +981,7 @@ EOF
     if [ "$URL_SCHEME" = https ]; then
       echo "Certificates are from Let's Encrypt; the same addresses also work with http://."
       echo "The firewall must allow TCP 80 and 443 from anywhere."
-    elif [ "$LAB_HTTPS" = on ]; then
+    elif https_on; then
       echo "HTTPS has no trusted certificate yet, so use http:// for now (details: ./lab.sh preflight)."
       echo "The firewall must allow TCP 80 and 443 from anywhere."
     else
@@ -1056,7 +1064,7 @@ cmd_preflight() {
     if [ "$v" = 200 ]; then c_ok "reachable at its public address: $(site_url app)"
     else c_warn "$(site_url app) did not answer from this machine (got '${v:-nothing}'). Check that the firewall allows TCP $HTTP_PORT from anywhere, then try it from your phone"; fi
   fi
-  if [ "$LAB_HTTPS" = on ]; then
+  if https_on; then
     local miss=""
     for h in app legacy grafana chaos; do https_valid "$h" || miss+="$h "; done
     if [ -z "$miss" ]; then c_ok "HTTPS certificates are trusted (Let's Encrypt)"

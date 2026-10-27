@@ -43,17 +43,34 @@ EC2 → **Elastic IPs** → Allocate → Actions → **Associate** with `relnusa
 
 ## 4. Check the install
 
-About 25 minutes after launch:
+The install runs by itself for 15 to 25 minutes after launch. To follow it:
 
 ```bash
 ssh -i relnusa-lab.pem ubuntu@PUBLIC_IP
-sudo tail -f /var/log/relnusa-lab-install.log     # ends with "done"
+sudo tail -f /var/log/relnusa-lab-install.log     # each step starts with "=="; the last line says "done" (Ctrl+C stops watching)
+```
+
+If a step fails, the log says `FAILED during: ...` with the reason just above it. After fixing the cause, `sudo bash /opt/kai-workshop/bootstrap.sh` continues from there. If you skipped the user data, install by hand: `curl -fsSL https://raw.githubusercontent.com/adamnugraha/kai-workshop/main/bootstrap.sh | sudo bash`.
+
+When the log says "done":
+
+```bash
 cd /opt/kai-workshop
 ./lab.sh preflight                                # must end with "ready"
 ./lab.sh info                                     # the addresses and the password
 ```
 
-`./lab.sh` switches to root by itself, so the `ubuntu` user is fine. If you skipped the user data, install by hand: `curl -fsSL https://raw.githubusercontent.com/adamnugraha/kai-workshop/main/bootstrap.sh | sudo bash`.
+`./lab.sh` switches to root by itself, so the `ubuntu` user is fine.
+
+Then test it from outside your own network, for example in Google Cloud Shell or any other machine on the internet:
+
+```bash
+IP=PUBLIC_IP
+curl -s -o /dev/null -w 'http  %{http_code}\n' http://app.$IP.sslip.io/
+curl -s -o /dev/null -w 'https %{http_code}\n' https://app.$IP.sslip.io/
+```
+
+Both lines should end in 200. If they do but your laptop cannot open the page, your office network is blocking it; try your phone on mobile data.
 
 **Instance made with an earlier version of this guide** (no HTTPS): add an inbound rule for **HTTPS (443)** from Anywhere to its security group, then run `cd /opt/kai-workshop && sudo git pull && ./lab.sh apply` on the VM. It keeps the data and takes a few minutes. (Later updates are just `./lab.sh update`; older copies of the script do not have that command yet.)
 

@@ -35,6 +35,8 @@ curl -s https://checkip.amazonaws.com    # the public IP the internet sees for t
 
 In public mode the lab asks Let's Encrypt for a free certificate for each address. Let's Encrypt checks every name over port 80 first, so port 80 must be open even if people only use `https://`. Ports 80 and 443 are published by Docker, which bypasses `ufw`; your provider's firewall or security group is what must allow TCP 80 and 443. The demo sites and Grafana's read-only view are open to anyone with the address; the operator tools ask for a password.
 
+**A VM on an office network without a public IP** can still use public mode for browsers on that same network: set `LAB_PUBLIC_IP` to the VM's own address (for example `10.20.30.40`), and the names become `app.10.20.30.40.sslip.io` and so on. HTTPS stays off, because Let's Encrypt cannot reach a private address. Some company DNS servers refuse names that point at private addresses; if the names do not open, use tunnel mode instead.
+
 ## 3. Install
 
 ```bash
@@ -49,6 +51,16 @@ sudo ./lab.sh install-deps      # Docker, k3d, kubectl, helm and plugins
 ```
 
 `./lab.sh` switches to root by itself (it asks for your sudo password if needed). If the detected public IP is wrong (for example behind a provider's NAT), set `LAB_PUBLIC_IP` in `lab.env` and run `./lab.sh update-ip`. Behind a corporate proxy that re-signs TLS, point `LAB_EXTRA_CA` in `lab.env` at the proxy's CA bundle.
+
+In public mode, test it from outside your own network, for example in Google Cloud Shell, or open the address on your phone using mobile data:
+
+```bash
+IP=SERVER_PUBLIC_IP
+curl -s -o /dev/null -w 'http  %{http_code}\n' http://app.$IP.sslip.io/
+curl -s -o /dev/null -w 'https %{http_code}\n' https://app.$IP.sslip.io/
+```
+
+Both lines should end in 200. If they do but your laptop cannot open the page, your office network is blocking it.
 
 Later changes to this repository reach an installed lab with `./lab.sh update`, which pulls the code and re-applies it without touching the data (a copy older than that command needs `git pull && ./lab.sh apply` once). After editing `lab.env`, run `./lab.sh apply`.
 

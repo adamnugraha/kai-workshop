@@ -48,16 +48,35 @@ cd /opt/kai-workshop && sudo git pull && ./lab.sh apply                    # on 
 
 ## 2. Check the install
 
-About 25 minutes later, open the VM with the **SSH** button in the console (a terminal in the browser), then:
+The install runs by itself for 15 to 25 minutes. To follow it, open the VM with the **SSH** button in the console (a terminal in the browser):
 
 ```bash
-sudo tail -f /var/log/relnusa-lab-install.log     # ends with "done"
+sudo tail -f /var/log/relnusa-lab-install.log     # each step starts with "=="; the last line says "done" (Ctrl+C stops watching)
+```
+
+Cloud Shell shows the same lines without opening the VM: `gcloud compute instances get-serial-port-output kai-lab --zone asia-southeast2-a | grep startup-script | tail -n 20`.
+
+If a step fails, the log says `FAILED during: ...` with the reason just above it. After fixing the cause, `sudo bash /opt/kai-workshop/bootstrap.sh` continues from there.
+
+When the log says "done":
+
+```bash
 cd /opt/kai-workshop
 ./lab.sh preflight                                # must end with "ready"
 ./lab.sh info                                     # the addresses and the password
 ```
 
 `./lab.sh` switches to root by itself, so your own user is fine.
+
+Then test it from outside your own network, in Cloud Shell:
+
+```bash
+IP=$(gcloud compute addresses describe kai-lab-ip --region asia-southeast2 --format='value(address)')
+curl -s -o /dev/null -w 'http  %{http_code}\n' http://app.$IP.sslip.io/
+curl -s -o /dev/null -w 'https %{http_code}\n' https://app.$IP.sslip.io/
+```
+
+Both lines should end in 200. If they do but your laptop cannot open the page, your office network is blocking it; try your phone on mobile data.
 
 ## 3. Open the lab
 

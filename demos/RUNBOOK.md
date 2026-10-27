@@ -1,18 +1,19 @@
 # Presenter runbook
 
-How to run the five live demos, what to point at, what to do when something goes wrong, and how to reset between rounds. Slide numbers refer to the two session decks. Every command runs on the lab VM from the repository folder.
+How to run the talk's three parts and five live demos, what to point at, what to do when something goes wrong, and how to reset between rounds. Slide numbers refer to the two session decks: Session 1 holds part 1 (system design) and part 2 (modernisation), Session 2 holds part 3 (SRE). Every command runs on the lab VM from the repository folder.
 
 ## The two hours at a glance
 
 | Time | Part | Live in the lab |
 |---|---|---|
-| 0:00–0:10 | Opening (Session 1 deck, slides 1–6) | Grafana *RelNusa · Ringkasan* on the second screen |
-| 0:10–0:55 | Session 1 · Modernisation | Demo 1 ticket rush · Demo 2 releases · Demo 3 node failure |
-| 0:55–1:05 | Break | Reset checklist (below); *RelNusa 1* stays on screen |
-| 1:05–1:50 | Session 2 · SRE | Demo 4 bank slowdown game day · Demo 5 database failover |
+| 0:00–0:05 | Opening (Session 1 deck, slides 1–2) | Grafana *RelNusa · Ringkasan* on the second screen |
+| 0:05–0:25 | Part 1 · System design (Session 1 deck, slides 3–16) | None needed; optional one-minute tour of *RelNusa 3* on slide 14 |
+| 0:25–1:00 | Part 2 · Modernisation (Session 1 deck, slides 17–29) | Demo 1 ticket rush · Demo 2 releases · Demo 3 node failure |
+| 1:00–1:10 | Break | Reset checklist (below); *RelNusa 1* stays on screen |
+| 1:10–1:50 | Part 3 · SRE (Session 2 deck) | Demo 4 bank slowdown game day · Demo 5 database failover |
 | 1:50–2:00 | Roadmap, take-home, Q&A | QR code to this repository |
 
-If time runs short, drop Demo 5 first, then the `release good` step of Demo 2. Demo 1 and Demo 4 carry the story of each session.
+Part 2 is tight with three demos in 35 minutes: use the short Demo 1 runs (`./lab.sh spike legacy 150 45s`, then the same for `modern`). If time still runs short, drop Demo 5 first, then the `release good` step of Demo 2. Slide 9 (the Access by KAI figures) is optional. Demo 1 and Demo 4 carry the story of their parts.
 
 ## Before the day
 
@@ -46,9 +47,23 @@ If time runs short, drop Demo 5 first, then the `release good` step of Demo 2. D
    9. The Telegram group (desktop app or web)
 4. A terminal on the VM with a large font (at least 20 pt), the repository folder open.
 
-## Session 1
+## Session 1 · Part 1: system design
 
-### Demo 1 · Ticket rush (slide 14, result on slide 15)
+No demo; the lab appears as the worked example. Keep each slide to about 90 seconds. The story in one line: set the target from the passenger's side, do the availability arithmetic, design for the busiest minute, then choose the stack.
+
+| Slides | Point to make |
+|---|---|
+| 4–6 | 99.9% is 44 minutes a month, measured as successful requests at the entrance, and a chain of five 99.9% parts is only 99.5% |
+| 7–8 | Two ways out of the chain: redundancy (two independent 99% copies give 99.99%) and taking parts off the mandatory path (payment through a queue). Copies only help in different failure domains; for 99.9%, design to at least the zone level |
+| 9–10 | Size for the busiest minute from passenger behaviour; scale the read path out, protect the write path with the waiting room. The numbers on slide 10 are an invented example, not KAI data |
+| 11 | Seats must be exact, schedules may lag a few seconds, payment may follow later |
+| 12–13 | The surge and failure patterns; all of them run in the lab |
+| 14–15 | Reference architecture and stack table. Bold entries are what the lab uses. If time allows, switch to *RelNusa 3* for a minute to show the components running |
+| 16 | The ten design review questions; the full worksheet is `templates/lembar-desain-sistem.md` |
+
+## Session 1 · Part 2: modernisation
+
+### Demo 1 · Ticket rush (slide 23, result on slide 24)
 
 | | |
 |---|---|
@@ -67,7 +82,7 @@ Expected (from the small test cluster, refresh on the VM): legacy loses tens of 
 
 If it goes wrong: if k6 cannot start, check `docker ps` for a leftover `k6` container and remove it. If the modern run shows errors, check `./lab.sh status` for pods not ready, then play backup video 1.
 
-### Demo 2 · Releases during peak hours (slide 18)
+### Demo 2 · Releases during peak hours (slide 27)
 
 | Step | Run | What the audience sees |
 |---|---|---|
@@ -80,7 +95,7 @@ Show the Argo Rollouts tab during steps 2 and 3, and *RelNusa 3 → Error bookin
 
 If it goes wrong: if the rollout looks stuck, run `kubectl argo rollouts get rollout booking -n modern` to see why. `./lab.sh release undo` always returns to a clean v1.
 
-### Demo 3 · One server dies (slide 19)
+### Demo 3 · One server dies (slide 28)
 
 | | |
 |---|---|
@@ -117,7 +132,7 @@ Then switch the second screen to *RelNusa 2* and open the Telegram group.
 
 Legacy page alerts from Demo 1 may still be firing; they clear by themselves within about 30 minutes. They are a useful talking point: the legacy app really did page someone.
 
-## Session 2
+## Session 2 · Part 3: SRE
 
 ### Demo 4 · Game day: the bank slows down (slides 13–15)
 

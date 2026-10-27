@@ -4,6 +4,7 @@ Templat ini menyertai sesi **Mencapai ketersediaan 99,9% ke atas**. Semuanya ber
 
 | Templat | Dipakai untuk | Kapan |
 |---|---|---|
+| [Lembar desain sistem](lembar-desain-sistem.md) | Target per perjalanan, hitungan rantai ketersediaan, domain kegagalan, kapasitas menit tersibuk, konsistensi data, susunan teknologi dan sepuluh pertanyaan tinjauan desain | Sebelum membangun atau memodernisasi sistem, dan di setiap tinjauan arsitektur |
 | [Lembar kerja SLO](lembar-kerja-slo.md) | Menurunkan SLI, SLO, error budget dan ambang peringatan dari satu perjalanan pengguna | Saat menetapkan atau meninjau SLO |
 | [Kebijakan error budget](kebijakan-error-budget.md) | Aturan rilis yang disepakati bisnis dan TI bila jatah gangguan menipis | Sekali, sebelum insiden berikutnya; ditinjau tiap kuartal |
 | [Matriks tingkat keparahan](matriks-keparahan.md) | Tingkat keparahan insiden, peran, target respons dan pola komunikasi | Sekali, lalu dipakai di setiap insiden |
@@ -15,9 +16,10 @@ Templat ini menyertai sesi **Mencapai ketersediaan 99,9% ke atas**. Semuanya ber
 
 ## Cara memakai
 
-1. Mulai dari **lembar kerja SLO** untuk satu perjalanan pengguna saja. Satu SLO yang dipakai lebih berguna daripada sepuluh yang hanya tertulis.
-2. Sepakati **kebijakan error budget** dan **matriks tingkat keparahan** dengan pemilik bisnis sebelum ada insiden besar. Keputusan yang disepakati saat tenang jauh lebih mudah dijalankan saat panik.
-3. Tulis **runbook** untuk setiap peringatan berseverity *page*. Peringatan tanpa runbook sebaiknya diturunkan menjadi tiket.
-4. Latih semuanya lewat **game day**, lalu perbaiki templat ini berdasarkan temuan latihan.
+1. Untuk sistem baru atau sistem yang akan dimodernisasi, isi dulu **lembar desain sistem**: target, hitungan dan risiko sebelum memilih teknologi.
+2. Mulai dari **lembar kerja SLO** untuk satu perjalanan pengguna saja. Satu SLO yang dipakai lebih berguna daripada sepuluh yang hanya tertulis.
+3. Sepakati **kebijakan error budget** dan **matriks tingkat keparahan** dengan pemilik bisnis sebelum ada insiden besar. Keputusan yang disepakati saat tenang jauh lebih mudah dijalankan saat panik.
+4. Tulis **runbook** untuk setiap peringatan berseverity *page*. Peringatan tanpa runbook sebaiknya diturunkan menjadi tiket.
+5. Latih semuanya lewat **game day**, lalu perbaiki templat ini berdasarkan temuan latihan.
 
 Bagian yang perlu diisi ditandai dengan `[...]`. Angka contoh hanya ilustrasi.

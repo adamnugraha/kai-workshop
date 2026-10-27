@@ -124,7 +124,7 @@ Daftar lengkap ada di `./lab.sh help`. Sebelum demo, jalankan `./lab.sh prefligh
 
 ## Templat untuk tim
 
-Folder [templates/](templates/README.md) berisi templat yang bisa langsung dipakai: lembar kerja SLO, kebijakan error budget, matriks tingkat keparahan, runbook peringatan, postmortem, rencana game day, kartu penilaian modernisasi dan rencana 90 hari.
+Folder [templates/](templates/README.md) berisi templat yang bisa langsung dipakai: lembar desain sistem, lembar kerja SLO, kebijakan error budget, matriks tingkat keparahan, runbook peringatan, postmortem, rencana game day, kartu penilaian modernisasi dan rencana 90 hari.
 
 ## SLO yang dipakai
 
@@ -149,7 +149,7 @@ load/           skrip k6: lalu lintas harian dan "war tiket"
 chaos/          eksperimen Chaos Mesh
 demos/          runbook demo untuk pembicara
 docs/           panduan memasang di AWS, GCP atau server sendiri, dan menyiapkan Telegram
-templates/      templat SLO, error budget, insiden, postmortem, game day dan modernisasi
+templates/      templat desain sistem, SLO, error budget, insiden, postmortem, game day dan modernisasi
 lab.sh          satu pintu untuk memasang dan menjalankan demo
 ```
 

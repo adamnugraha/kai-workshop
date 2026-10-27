@@ -18,8 +18,9 @@ if [ -f "$ROOT/lab.env" ]; then set -a; . "$ROOT/lab.env"; set +a; fi
 
 CLUSTER="${CLUSTER:-relnusa}"
 # How people reach the lab:
-#   public  http://app.<public-ip>.sslip.io and so on; port 80 is open to the
-#           internet and the operator tools ask for a login
+#   public  https://app.<public-ip>.sslip.io and so on (http:// works too);
+#           ports 80 and 443 are open to the internet and the operator tools
+#           ask for a login
 #   tunnel  everything stays on 127.0.0.1 and is opened over an SSH tunnel
 LAB_ACCESS="${LAB_ACCESS:-tunnel}"
 case "$LAB_ACCESS" in public|tunnel) ;; *) echo "LAB_ACCESS must be public or tunnel" >&2; exit 1;; esac
@@ -45,6 +46,18 @@ TRAFFIC_RATE="${TRAFFIC_RATE:-4}"
 # fixed when the cluster is created). Prometheus always stays on 127.0.0.1.
 HTTP_PORT="${HTTP_PORT:-80}"
 PROM_PORT="${PROM_PORT:-9090}"
+# HTTPS with free Let's Encrypt certificates. auto turns it on in public mode
+# on port 80, because Let's Encrypt checks each host name over port 80.
+LAB_HTTPS="${LAB_HTTPS:-auto}"
+case "$LAB_HTTPS" in
+  auto) if [ "$LAB_ACCESS" = public ] && [ "$HTTP_PORT" = 80 ]; then LAB_HTTPS=on; else LAB_HTTPS=off; fi;;
+  off) ;;
+  *) echo "LAB_HTTPS must be auto or off" >&2; exit 1;;
+esac
+# Optional contact address for Let's Encrypt, and the ACME server (the
+# Let's Encrypt staging server or a test CA can be set here for testing).
+LAB_ACME_EMAIL="${LAB_ACME_EMAIL:-}"
+LAB_ACME_CA="${LAB_ACME_CA:-https://acme-v02.api.letsencrypt.org/directory}"
 DOCKER_BUILD_FLAGS="${DOCKER_BUILD_FLAGS:-}"
 
 if [ "$LAB_PROFILE" = "small" ]; then DB_INSTANCES="${DB_INSTANCES:-2}"; else DB_INSTANCES="${DB_INSTANCES:-3}"; fi
@@ -98,7 +111,16 @@ site_port() {
   # The port people type in the browser: the tunnel's 8080, or HTTP_PORT.
   if [ "$LAB_ACCESS" = tunnel ]; then echo ":8080"; elif [ "$HTTP_PORT" != 80 ]; then echo ":$HTTP_PORT"; fi
 }
-site_url() { echo "http://$1.$LAB_DOMAIN$(site_port)"; }
+# http, or https once the certificates are trusted (detect_scheme sets it).
+URL_SCHEME=http
+site_url() { echo "$URL_SCHEME://$1.$LAB_DOMAIN$(site_port)"; }
+https_valid() {
+  # True when https://<site>.<domain> on this machine presents a certificate
+  # that browsers trust, checked against the system's CA list.
+  [ "$LAB_HTTPS" = on ] || return 1
+  curl -sS -m 5 --noproxy '*' -o /dev/null --resolve "${1:-app}.$LAB_DOMAIN:443:127.0.0.1" "https://${1:-app}.$LAB_DOMAIN/" 2>/dev/null
+}
+detect_scheme() { if https_valid app; then URL_SCHEME=https; else URL_SCHEME=http; fi; }
 lab_curl() { curl -fsS -u "admin:$(grafana_password)" -H "Host: $1.$LAB_DOMAIN" "${@:3}" "http://127.0.0.1:$HTTP_PORT$2"; }
 
 grafana_password() {
@@ -190,6 +212,7 @@ ports:
     nodeFilters: [server:0:direct]
   - port: 127.0.0.1:$PROM_PORT:30090
     nodeFilters: [server:0:direct]
+$(https_port_yaml)
 options:
   k3d:
     wait: true
@@ -262,6 +285,22 @@ EOF
   fi
 }
 
+https_port_yaml() {
+  # Port 443 comes straight from the control-plane node, like port 80.
+  [ "$LAB_HTTPS" = on ] || return 0
+  if port_in_use 443; then
+    c_warn "port 443 is already used on this machine, so HTTPS stays off (plain HTTP works)" >&2
+    return 0
+  fi
+  printf '  - port: %s:443:443\n    nodeFilters: [server:0:direct]\n' "$LAB_BIND"
+}
+
+port_in_use() {
+  if command -v ss >/dev/null; then ss -ltnH "sport = :$1" 2>/dev/null | grep . >/dev/null
+  else (exec 3<>"/dev/tcp/127.0.0.1/$1") 2>/dev/null
+  fi
+}
+
 cluster_exists() { k3d cluster list -o json 2>/dev/null | grep "\"name\":\"$CLUSTER\"" >/dev/null; }
 
 build_image() {
@@ -300,6 +339,8 @@ create_cluster() {
     c_ok "cluster $CLUSTER exists"
     docker start "k3d-$CLUSTER-agent-0" "k3d-$CLUSTER-agent-1" >/dev/null 2>&1 || true
   else
+    # A port 443 forwarder left from an older cluster would block the new one.
+    docker rm -f relnusa-https >/dev/null 2>&1 || true
     write_k3d_config
     c_info "Creating 3-node Kubernetes cluster (1 control plane + 2 workers)"
     k3d cluster create --config "$STATE/k3d.yaml"
@@ -307,8 +348,119 @@ create_cluster() {
   fi
   check_bind
   kubectl config use-context "k3d-$CLUSTER" >/dev/null
-  kubectl apply -f "$ROOT/k8s/cluster/traefik-config.yaml" >/dev/null
+  traefik_config | kubectl apply -f - >/dev/null
+  ensure_https_port
   pin_system_pods
+}
+
+traefik_config() {
+  # Settings for the Traefik ingress that ships with k3s, plus HTTPS when on.
+  cat "$ROOT/k8s/cluster/traefik-config.yaml"
+  [ "$LAB_HTTPS" = on ] || return 0
+  {
+    cat <<EOF
+# HTTPS: each lab host name gets a Let's Encrypt certificate, checked over
+# port 80 (HTTP-01). The certificates are kept on a small volume, so a
+# restart reuses them instead of asking again. Plain HTTP keeps working.
+# The delay lets a Traefik rollout finish first: until the old pod is gone,
+# it may answer the check instead of the new one.
+persistence:
+  enabled: true
+  size: 128Mi
+certificatesResolvers:
+  le:
+    acme:
+      caServer: $LAB_ACME_CA
+      storage: /data/acme.json
+      httpChallenge:
+        entryPoint: web
+        delay: 30s
+EOF
+    if [ -n "$LAB_ACME_EMAIL" ]; then echo "      email: $LAB_ACME_EMAIL"; fi
+    cat <<'EOF'
+ports:
+  websecure:
+    http:
+      tls:
+        enabled: true
+        certResolver: le
+EOF
+  } | sed 's/^/    /'
+}
+
+apply_traefik_config() {
+  # k3s applies new Traefik settings with a helm job and then rolls the pod;
+  # wait for both, so the next steps see the new settings.
+  local before out t=0
+  before="$(kubectl -n kube-system get job helm-install-traefik -o jsonpath='{.metadata.uid}' 2>/dev/null || true)"
+  out="$(traefik_config | kubectl apply -f - 2>&1)" || die "could not apply the Traefik settings: $out"
+  case "$out" in *unchanged*) return 0;; esac
+  until [ "$(kubectl -n kube-system get job helm-install-traefik -o jsonpath='{.metadata.uid} {.status.succeeded}' 2>/dev/null)" != "$before 1" ] &&
+        [ "$(kubectl -n kube-system get job helm-install-traefik -o jsonpath='{.status.succeeded}' 2>/dev/null)" = 1 ]; do
+    sleep 3; t=$((t+3))
+    if [ $t -ge 180 ]; then c_warn "Traefik settings not applied after 3 minutes (check: kubectl -n kube-system get pods)"; return 0; fi
+  done
+  kubectl -n kube-system rollout status deploy/traefik --timeout=180s >/dev/null 2>&1 || c_warn "Traefik is still restarting"
+}
+
+https_port_direct() { docker port "k3d-$CLUSTER-server-0" 443/tcp >/dev/null 2>&1; }
+
+ensure_https_port() {
+  # Clusters created before HTTPS support do not publish port 443. Instead of
+  # rebuilding them, a small TCP forwarder container publishes it.
+  if [ "$LAB_HTTPS" != on ] || https_port_direct; then
+    docker rm -f relnusa-https >/dev/null 2>&1 || true
+    return 0
+  fi
+  [ "$(docker inspect -f '{{.State.Running}}' relnusa-https 2>/dev/null)" = true ] && return 0
+  docker rm -f relnusa-https >/dev/null 2>&1 || true
+  if port_in_use 443; then
+    c_warn "port 443 is already used on this machine, so HTTPS is not published (plain HTTP works)"
+    return 0
+  fi
+  local img
+  img="$(docker inspect -f '{{.Config.Image}}' "k3d-$CLUSTER-serverlb" 2>/dev/null || echo "ghcr.io/k3d-io/k3d-proxy:${K3D_VERSION#v}")"
+  cat >"$STATE/https-forwarder.conf" <<EOF
+# Port 443 forwarder for the lab (written by lab.sh).
+worker_processes 1;
+error_log stderr notice;
+events { worker_connections 1024; }
+stream {
+  # Docker's DNS, asked again for each connection, so a node that comes back
+  # with a new IP after a reboot is still found.
+  resolver 127.0.0.11 valid=10s ipv6=off;
+  server {
+    listen 443;
+    set \$lab_node k3d-$CLUSTER-server-0:443;
+    proxy_pass \$lab_node;
+    proxy_connect_timeout 2s;
+    proxy_timeout 600s;
+  }
+}
+EOF
+  # The k3d load balancer image is already on this machine and is plain nginx.
+  if docker run -d --name relnusa-https --restart unless-stopped --network "k3d-$CLUSTER" \
+      -p "$LAB_BIND:443:443" -v "$STATE/https-forwarder.conf:/etc/nginx/nginx.conf:ro" \
+      --entrypoint nginx "$img" -g 'daemon off;' >/dev/null; then
+    c_ok "port 443 forwarded to the cluster"
+  else
+    c_warn "could not publish port 443; plain HTTP works"
+  fi
+}
+
+wait_https() {
+  # Let's Encrypt usually answers within a minute of the host names appearing.
+  [ "$LAB_HTTPS" = on ] || return 0
+  c_info "Waiting for the Let's Encrypt certificates (up to 4 minutes)"
+  local t=0
+  until https_valid app && https_valid grafana; do
+    sleep 5; t=$((t+5))
+    if [ $t -ge 240 ]; then
+      c_warn "no trusted HTTPS certificate yet; plain HTTP works meanwhile. Details: ./lab.sh preflight"
+      return 0
+    fi
+  done
+  c_ok "HTTPS certificates issued"
 }
 
 check_bind() {
@@ -501,7 +653,36 @@ cmd_update_ip() {
   c_info "Applying host names *.$new and the tools login (about 2 minutes)"
   LAB_DOMAIN="$new"
   apply_hostnames
+  wait_https
   c_ok "done. Addresses: ./lab.sh info"
+}
+
+cmd_update() {
+  # Fetch the latest lab code, then apply it to the running cluster.
+  local owner; owner="$(stat -c %U "$ROOT")"
+  c_info "Fetching the latest lab code"
+  if [ "$owner" = root ]; then git -C "$ROOT" pull --ff-only
+  else sudo -u "$owner" -H git -C "$ROOT" pull --ff-only
+  fi || die "could not update the code (local changes? see: git -C $ROOT status)"
+  exec bash "$ROOT/lab.sh" apply
+}
+
+cmd_apply() {
+  # Re-apply the lab's settings to the running cluster, for example after
+  # ./lab.sh update or a change in lab.env. Data, images and releases stay.
+  cluster_exists || die "no cluster yet; run ./lab.sh up"
+  check_bind
+  [ "$(image_ref)" = "$(cat "$STATE/image" 2>/dev/null)" ] || cmd_rebuild
+  LAB_DOMAIN="$(desired_domain)"
+  c_info "Host names *.$LAB_DOMAIN, tools login and dashboards (about 2 minutes)"
+  apply_hostnames
+  # After the host names, so certificates are only requested for current ones.
+  c_info "Ingress settings$([ "$LAB_HTTPS" = on ] && echo " and HTTPS")"
+  apply_traefik_config
+  ensure_https_port
+  install_boot_service
+  wait_https
+  cmd_info
 }
 
 roll_app_pods() {
@@ -525,6 +706,7 @@ cmd_up() {
   deploy_apps
   cmd_traffic start
   install_boot_service
+  wait_https
   c_ok "lab is up in $(( ($(date +%s) - start) / 60 )) minutes"
   cmd_info
 }
@@ -580,6 +762,7 @@ after_start() {
   # Shared tail of restart and boot.
   pin_system_pods
   docker start relnusa-traffic >/dev/null 2>&1 || true
+  ensure_https_port
   if [ "$LAB_ACCESS" = public ] && [ -z "$LAB_DOMAIN_FIXED" ]; then
     # A stopped and started VM usually gets a new public IP.
     kubectl -n observability rollout status deploy/kps-grafana --timeout=300s >/dev/null 2>&1 || true
@@ -617,6 +800,7 @@ cmd_rebuild() {
 
 cmd_down() {
   cmd_traffic stop || true
+  docker rm -f relnusa-https >/dev/null 2>&1 || true
   k3d cluster delete "$CLUSTER"
 }
 
@@ -767,6 +951,7 @@ cmd_telegram_test() {
 
 cmd_info() {
   local pw; pw="$(grafana_password)"
+  detect_scheme
   echo
   if [ "$LAB_ACCESS" = public ]; then
     cat <<EOF
@@ -784,9 +969,17 @@ Operator tools (login: admin / $pw):
   Prometheus        $(site_url prometheus)
   Alertmanager      $(site_url alertmanager)
 
-The firewall must allow TCP $HTTP_PORT from anywhere. If the IP changes after a
-restart, the names follow by themselves (or run ./lab.sh update-ip).
 EOF
+    if [ "$URL_SCHEME" = https ]; then
+      echo "Certificates are from Let's Encrypt; the same addresses also work with http://."
+      echo "The firewall must allow TCP 80 and 443 from anywhere."
+    elif [ "$LAB_HTTPS" = on ]; then
+      echo "HTTPS has no trusted certificate yet, so use http:// for now (details: ./lab.sh preflight)."
+      echo "The firewall must allow TCP 80 and 443 from anywhere."
+    else
+      echo "The firewall must allow TCP $HTTP_PORT from anywhere."
+    fi
+    echo "If the IP changes after a restart, the names follow by themselves (or run ./lab.sh update-ip)."
   else
     local ip; ip="$(public_ip 2>/dev/null || hostname -I | awk '{print $1}')"
     cat <<EOF
@@ -863,6 +1056,18 @@ cmd_preflight() {
     if [ "$v" = 200 ]; then c_ok "reachable at its public address: $(site_url app)"
     else c_warn "$(site_url app) did not answer from this machine (got '${v:-nothing}'). Check that the firewall allows TCP $HTTP_PORT from anywhere, then try it from your phone"; fi
   fi
+  if [ "$LAB_HTTPS" = on ]; then
+    local miss=""
+    for h in app legacy grafana chaos; do https_valid "$h" || miss+="$h "; done
+    if [ -z "$miss" ]; then c_ok "HTTPS certificates are trusted (Let's Encrypt)"
+    else
+      c_warn "no trusted HTTPS certificate yet for: ${miss}(plain HTTP works). Latest Traefik message about it:"
+      kubectl -n kube-system logs deploy/traefik --since=60m 2>/dev/null | grep -i -E 'acme|certificate' | tail -n 1 | cut -c1-400 || true
+    fi
+    v="$(curl -sk -m 8 -o /dev/null -w '%{http_code}' "https://app.$LAB_DOMAIN/" 2>/dev/null || true)"
+    if [ "$v" = 200 ]; then c_ok "reachable over HTTPS at https://app.$LAB_DOMAIN"
+    else c_warn "https://app.$LAB_DOMAIN did not answer from this machine (got '${v:-nothing}'). Check that the firewall allows TCP 443 from anywhere"; fi
+  fi
 
   v="$(kubectl -n modern get rollout booking -o jsonpath='{.status.phase} {.spec.template.spec.containers[0].env[?(@.name=="APP_VERSION")].value}' 2>/dev/null)"
   [ "$v" = "Healthy v1" ] && c_ok "booking release is v1 and healthy" || fail "booking release is '$v' (./lab.sh release undo)"
@@ -915,6 +1120,8 @@ Setup
   ./lab.sh preflight             check everything before going on stage
   ./lab.sh restart               restart the cluster in order (nodes not ready after a reboot)
   ./lab.sh update-ip             point the host names at a new public IP (done by restart too)
+  ./lab.sh update                fetch the latest lab code and apply it (keeps data)
+  ./lab.sh apply                 re-apply settings after editing lab.env
   ./lab.sh down                  delete the cluster
   ./lab.sh rebuild               rebuild the app image and roll the pods
   ./lab.sh alerts                re-apply alert routing after editing lab.env
@@ -954,6 +1161,8 @@ main() {
     restart) cmd_restart "$@";;
     boot) cmd_boot "$@";;
     update-ip) cmd_update_ip "$@";;
+    update) cmd_update "$@";;
+    apply) cmd_apply "$@";;
     down) cmd_down "$@";;
     rebuild) cmd_rebuild "$@";;
     info) cmd_info "$@";;

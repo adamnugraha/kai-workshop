@@ -2,7 +2,7 @@
 
 About 10 minutes in Cloud Shell, then 15 to 25 minutes of automatic install. Other platforms: [AWS](aws-setup.md), [your own server](server-setup.md). Alerts: [Telegram](telegram-setup.md).
 
-By default the lab opens at the VM's external IP, for example `http://app.203.0.113.10.sslip.io`, with no SSH tunnel. [sslip.io](https://sslip.io) is a free DNS service that answers any `<name>.<ip>.sslip.io` with that IP, so there is no DNS to set up.
+By default the lab opens at the VM's external IP, for example `https://app.203.0.113.10.sslip.io`, with no SSH tunnel. [sslip.io](https://sslip.io) is a free DNS service that answers any `<name>.<ip>.sslip.io` with that IP, so there is no DNS to set up. The lab gets free Let's Encrypt certificates for these names by itself; `http://` works too.
 
 ## 1. Create the VM
 
@@ -22,9 +22,9 @@ gcloud services enable compute.googleapis.com
 # A fixed external address, so the lab's addresses survive a stop and start
 gcloud compute addresses create kai-lab-ip --region=asia-southeast2
 
-# Let browsers reach the lab on port 80
+# Let browsers reach the lab on ports 80 and 443 (Let's Encrypt checks port 80)
 gcloud compute firewall-rules create kai-lab-http --network=default \
-  --direction=INGRESS --allow=tcp:80 --source-ranges=0.0.0.0/0 --target-tags=kai-lab
+  --direction=INGRESS --allow=tcp:80,tcp:443 --source-ranges=0.0.0.0/0 --target-tags=kai-lab
 
 gcloud compute instances create kai-lab \
   --zone=asia-southeast2-a \
@@ -38,6 +38,13 @@ gcloud compute instances create kai-lab \
 To keep everything on 127.0.0.1 and use an SSH tunnel instead, add `export LAB_ACCESS=tunnel` on the line before `curl` in `startup.sh` (and skip the firewall rule). Telegram settings can be passed the same way (`export TELEGRAM_BOT_TOKEN=...`, `export TELEGRAM_CHAT_ID=...`).
 
 `n2-standard-8` instead of `e2-standard-8` gives steadier CPU for the load tests.
+
+**VM made with an earlier version of this guide** (firewall rule for port 80 only, no HTTPS): open 443 in Cloud Shell, then update the lab on the VM. The update keeps the data and takes a few minutes.
+
+```bash
+gcloud compute firewall-rules update kai-lab-http --allow=tcp:80,tcp:443   # Cloud Shell
+cd /opt/kai-workshop && ./lab.sh update                                    # on the VM
+```
 
 ## 2. Check the install
 
@@ -58,16 +65,19 @@ Open the addresses from `./lab.sh info` in any browser, including a phone:
 
 | Address | What | Login |
 |---|---|---|
-| `http://app.<ip>.sslip.io` | Modern site | none |
-| `http://legacy.<ip>.sslip.io` | Legacy site | none |
-| `http://grafana.<ip>.sslip.io` | Dashboards | view without login; `admin` to edit |
-| `http://jaeger.`, `chaos.`, `rollouts.`, `prometheus.`, `alertmanager.<ip>.sslip.io` | Operator tools | `admin` and the password from `./lab.sh info` |
+| `https://app.<ip>.sslip.io` | Modern site | none |
+| `https://legacy.<ip>.sslip.io` | Legacy site | none |
+| `https://grafana.<ip>.sslip.io` | Dashboards | view without login; `admin` to edit |
+| `https://jaeger.`, `chaos.`, `rollouts.`, `prometheus.`, `alertmanager.<ip>.sslip.io` | Operator tools | `admin` and the password from `./lab.sh info` |
 
 Run the demo commands in the console's browser SSH window. It works over HTTPS, so a venue that blocks port 22 is no problem.
+
+If `./lab.sh info` still shows `http://` addresses, the certificates have not been issued yet; `./lab.sh preflight` says why (usually port 80 or 443 closed in the firewall).
 
 ## 4. At the venue
 
 - **The sslip.io names do not resolve:** a few corporate DNS filters block wildcard DNS services. Use your phone hotspot, or set your own domain: point a wildcard record `*.lab.example.com` at the static address, put `LAB_DOMAIN=lab.example.com` in `lab.env`, and run `./lab.sh update-ip`.
+- **A page does not open over `https://`, or shows a certificate warning:** use the same address with `http://`, then run `./lab.sh preflight`.
 - **Test it the day before** from a network other than your office, ideally from your phone on mobile data.
 
 ## 5. Cost and stopping

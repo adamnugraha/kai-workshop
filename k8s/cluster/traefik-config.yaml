@@ -3,6 +3,8 @@
 # - gives up on a dead pod after 1 s and on a stuck answer after 15 s
 #   (a stuck request becomes a 504, as a real load balancer would report)
 # - exposes request metrics, which are the source of truth for the SLOs
+# In public mode, lab.sh appends the HTTPS (Let's Encrypt) settings to these
+# values; see traefik_config in lab.sh.
 apiVersion: helm.cattle.io/v1
 kind: HelmChartConfig
 metadata:

@@ -33,8 +33,8 @@ If time runs short, drop Demo 5 first, then the `release good` step of Demo 2. D
    ./lab.sh preflight          # must end with "ready"
    ./lab.sh telegram-test      # message arrives in the group within about 15 seconds
    ```
-   `preflight` checks nodes, pods, the sites, the login on the operator tools, that the lab answers at its public address, the booking release, the database, chaos experiments, the bank, background traffic, Prometheus targets, the five SLOs, firing alerts, Telegram and network fault support.
-3. Browser tabs, in this order (Chrome or Edge, zoom 125% so the back row can read the panels). The addresses below are written `<site>.<domain>`; `./lab.sh info` prints the real ones (`app.<ip>.sslip.io` in public mode, `app.localhost:8080` over a tunnel):
+   `preflight` checks nodes, pods, the sites, the login on the operator tools, that the lab answers at its public address, the HTTPS certificates, the booking release, the database, chaos experiments, the bank, background traffic, Prometheus targets, the five SLOs, firing alerts, Telegram and network fault support.
+3. Browser tabs, in this order (Chrome or Edge, zoom 125% so the back row can read the panels). The addresses below are written `<site>.<domain>`; `./lab.sh info` prints the real ones (`https://app.<ip>.sslip.io` in public mode, `http://app.localhost:8080` over a tunnel):
    1. The session deck
    2. Grafana · `RelNusa · 1 · Sebelum vs sesudah` (time range: last 15 minutes, refresh 5s)
    3. Grafana · `RelNusa · 2 · SLO dan error budget` (last 30 minutes)
@@ -181,7 +181,8 @@ With the full profile (three instances) a replica remains for searches throughou
 
 | Symptom | Quick fix | If that fails |
 |---|---|---|
-| Browser cannot open the lab's addresses | Public mode: try from your phone on mobile data; if that works, the venue blocks sslip.io or port 80, so use the hotspot. Tunnel mode: restart the SSH tunnel | Use the backup videos |
+| Browser cannot open the lab's addresses | Public mode: try from your phone on mobile data; if that works, the venue blocks sslip.io or ports 80/443, so use the hotspot. Tunnel mode: restart the SSH tunnel | Use the backup videos |
+| Certificate warning, or `https://` does not open | Use the same address with `http://`; afterwards check `./lab.sh preflight` | |
 | The public IP changed (no Elastic or static IP) | `./lab.sh update-ip` (the boot service normally does this) | |
 | Grafana panels show "No data" | Check the time range (last 15 minutes), then `./lab.sh preflight` | Prometheus at `prometheus.<domain>` |
 | `chaos bank-lambat` fails with "no netem module" | `./lab.sh bank slow` | Backup video 4 |

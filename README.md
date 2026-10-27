@@ -49,8 +49,8 @@ Lab berjalan di Kubernetes ringan (k3s di dalam Docker lewat k3d) dengan tiga no
 
 - Satu VM Ubuntu 22.04 atau 24.04, 8 vCPU, 32 GB RAM, disk 100 GB (minimum 4 vCPU dan 16 GB untuk profil `small`)
 - Akses internet keluar ke Docker Hub, GitHub, ghcr.io, quay.io dan registry.k8s.io
-- Akses masuk: SSH, ditambah TCP 80 bila lab dibuka lewat IP publik (mode `public`, bawaan untuk VM di cloud)
-- Port 80 (dan 9090 di 127.0.0.1) harus kosong; bila sudah terpakai, ubah `HTTP_PORT` dan `PROM_PORT` di `lab.env` sebelum memasang
+- Akses masuk: SSH, ditambah TCP 80 dan 443 bila lab dibuka lewat IP publik (mode `public`, bawaan untuk VM di cloud)
+- Port 80 dan 443 (serta 9090 di 127.0.0.1) harus kosong; bila 80 atau 9090 sudah terpakai, ubah `HTTP_PORT` dan `PROM_PORT` di `lab.env` sebelum memasang (HTTPS hanya aktif bila lab memakai port 80)
 
 Panduan langkah demi langkah: [AWS](docs/aws-setup.md), [Google Cloud](docs/gcp-setup.md), [server sendiri](docs/server-setup.md), dan [peringatan Telegram](docs/telegram-setup.md).
 
@@ -73,20 +73,28 @@ sudo ./lab.sh install-deps     # Docker, k3d, kubectl, helm, plugin kubectl
 ./lab.sh info                  # alamat dan kata sandi
 ```
 
+Memperbarui lab yang sudah terpasang ke versi terbaru repositori ini (data dan rilis tetap):
+
+```bash
+./lab.sh update
+```
+
 ## Cara mengakses
 
 Ada dua mode, dipilih dengan `LAB_ACCESS` di `lab.env` sebelum `./lab.sh up`.
 
-**Mode `public`** (bawaan untuk pemasangan lewat `bootstrap.sh`): semua alamat memakai IP publik VM melalui layanan DNS gratis [sslip.io](https://sslip.io), jadi tidak perlu mengatur DNS atau SSH tunnel. Buka TCP 80 di firewall.
+**Mode `public`** (bawaan untuk pemasangan lewat `bootstrap.sh`): semua alamat memakai IP publik VM melalui layanan DNS gratis [sslip.io](https://sslip.io), jadi tidak perlu mengatur DNS atau SSH tunnel. Lab meminta sertifikat HTTPS gratis dari Let's Encrypt untuk setiap alamat, sehingga `https://` langsung bisa dipakai; `http://` tetap berfungsi. Buka TCP 80 dan 443 di firewall (Let's Encrypt memeriksa setiap nama lewat port 80).
 
 | Alamat | Isi | Login |
 |---|---|---|
-| `http://legacy.<ip>.sslip.io` | Situs sistem lama | Tidak perlu |
-| `http://app.<ip>.sslip.io` | Situs sistem modern | Tidak perlu |
-| `http://grafana.<ip>.sslip.io` | Dasbor | Melihat tanpa login; mengubah sebagai `admin` |
-| `http://jaeger.<ip>.sslip.io`, `chaos.`, `rollouts.`, `prometheus.`, `alertmanager.` | Alat operator | `admin` dan kata sandi dari `./lab.sh info` |
+| `https://legacy.<ip>.sslip.io` | Situs sistem lama | Tidak perlu |
+| `https://app.<ip>.sslip.io` | Situs sistem modern | Tidak perlu |
+| `https://grafana.<ip>.sslip.io` | Dasbor | Melihat tanpa login; mengubah sebagai `admin` |
+| `https://jaeger.<ip>.sslip.io`, `chaos.`, `rollouts.`, `prometheus.`, `alertmanager.` | Alat operator | `admin` dan kata sandi dari `./lab.sh info` |
 
-Alamat persisnya ditampilkan oleh `./lab.sh info`. Bila IP berubah setelah VM dimatikan dan dinyalakan, nama-nama itu ikut berubah dengan sendirinya. Untuk alamat yang tetap, pakai Elastic IP (AWS) atau IP statis (GCP), atau domain sendiri lewat `LAB_DOMAIN`.
+Alamat persisnya ditampilkan oleh `./lab.sh info`. Bila sertifikat belum terbit (misalnya port 80 atau 443 masih tertutup), `./lab.sh info` menampilkan alamat `http://` dan `./lab.sh preflight` menjelaskan sebabnya. Untuk mematikan HTTPS, isi `LAB_HTTPS=off` di `lab.env` lalu jalankan `./lab.sh apply`.
+
+Bila IP berubah setelah VM dimatikan dan dinyalakan, nama-nama itu ikut berubah dengan sendirinya, termasuk sertifikatnya. Untuk alamat yang tetap, pakai Elastic IP (AWS) atau IP statis (GCP), atau domain sendiri lewat `LAB_DOMAIN`.
 
 **Mode `tunnel`**: semua hanya terbuka di 127.0.0.1 pada VM, cocok untuk server tanpa IP publik. Dari laptop:
 
@@ -156,7 +164,7 @@ lab.sh          satu pintu untuk memasang dan menjalankan demo
 
 ## Catatan
 
-- Lab dibuat untuk pelatihan. Di mode `public` lalu lintas memakai HTTP biasa tanpa enkripsi; alat operator dilindungi login sederhana, dan tidak ada data nyata di dalam lab. Hapus VM setelah acara.
+- Lab dibuat untuk pelatihan. Di mode `public` alamat memakai HTTPS dengan sertifikat Let's Encrypt, dan HTTP biasa tetap tersedia; alat operator dilindungi login sederhana, dan tidak ada data nyata di dalam lab. Hapus VM setelah acara.
 - Angka kinerja di lab bergantung pada ukuran VM dan tidak bisa langsung dibandingkan dengan sistem produksi mana pun.
 
 ## Lisensi

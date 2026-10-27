@@ -24,7 +24,7 @@ cd "$LAB_DIR"
 [ -f lab.env ] || cp lab.env.example lab.env
 # Settings passed in the environment (for example in cloud user data, such as
 # LAB_ACCESS=tunnel or TELEGRAM_BOT_TOKEN=...) are written into lab.env.
-for k in LAB_ACCESS LAB_DOMAIN LAB_PUBLIC_IP LAB_PROFILE HTTP_PORT TRAFFIC_RATE TELEGRAM_BOT_TOKEN TELEGRAM_CHAT_ID; do
+for k in LAB_ACCESS LAB_DOMAIN LAB_PUBLIC_IP LAB_HTTPS LAB_ACME_EMAIL LAB_PROFILE HTTP_PORT TRAFFIC_RATE TELEGRAM_BOT_TOKEN TELEGRAM_CHAT_ID; do
   v="${!k:-}"
   [ -n "$v" ] || continue
   if grep -q "^$k=" lab.env; then sed -i "s|^$k=.*|$k=$v|" lab.env; else echo "$k=$v" >>lab.env; fi

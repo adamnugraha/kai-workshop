@@ -2,7 +2,7 @@
 
 About 15 minutes in the AWS console, then 15 to 25 minutes of automatic install. Other platforms: [GCP](gcp-setup.md), [your own server](server-setup.md). Alerts: [Telegram](telegram-setup.md).
 
-By default the lab opens at the VM's public IP, for example `http://app.203.0.113.10.sslip.io`, with no SSH tunnel. [sslip.io](https://sslip.io) is a free DNS service that answers any `<name>.<ip>.sslip.io` with that IP, so there is no DNS to set up.
+By default the lab opens at the VM's public IP, for example `https://app.203.0.113.10.sslip.io`, with no SSH tunnel. [sslip.io](https://sslip.io) is a free DNS service that answers any `<name>.<ip>.sslip.io` with that IP, so there is no DNS to set up. The lab gets free Let's Encrypt certificates for these names by itself; `http://` works too.
 
 ## 0. Enable the Jakarta region (once per account)
 
@@ -25,7 +25,7 @@ EC2 → Region **Asia Pacific (Jakarta) ap-southeast-3** → Launch instance:
 | Instance type | `m7i.2xlarge` (8 vCPU, 32 GiB) |
 | Key pair | create one and keep the `.pem` file |
 | Network | default VPC, auto-assign public IP **enabled** |
-| Security group | inbound **SSH (22)** and **HTTP (80)**, both from **Anywhere (0.0.0.0/0)**. The venue's address is not known in advance; Ubuntu only accepts key logins, and the lab's operator tools ask for a password |
+| Security group | inbound **SSH (22)**, **HTTP (80)** and **HTTPS (443)**, all from **Anywhere (0.0.0.0/0)**. The venue's address is not known in advance; Ubuntu only accepts key logins, the lab's operator tools ask for a password, and Let's Encrypt checks port 80 before it issues the certificates |
 | Storage | 100 GiB gp3 |
 | Advanced details → IAM instance profile | `relnusa-lab-ssm` |
 | Advanced details → User data | the script below |
@@ -55,18 +55,22 @@ cd /opt/kai-workshop
 
 `./lab.sh` switches to root by itself, so the `ubuntu` user is fine. If you skipped the user data, install by hand: `curl -fsSL https://raw.githubusercontent.com/adamnugraha/kai-workshop/main/bootstrap.sh | sudo bash`.
 
+**Instance made with an earlier version of this guide** (no HTTPS): add an inbound rule for **HTTPS (443)** from Anywhere to its security group, then run `cd /opt/kai-workshop && ./lab.sh update` on the VM. The update keeps the data and takes a few minutes.
+
 ## 5. Open the lab
 
 Open the addresses from `./lab.sh info` in any browser, including a phone:
 
 | Address | What | Login |
 |---|---|---|
-| `http://app.<ip>.sslip.io` | Modern site | none |
-| `http://legacy.<ip>.sslip.io` | Legacy site | none |
-| `http://grafana.<ip>.sslip.io` | Dashboards | view without login; `admin` to edit |
-| `http://jaeger.`, `chaos.`, `rollouts.`, `prometheus.`, `alertmanager.<ip>.sslip.io` | Operator tools | `admin` and the password from `./lab.sh info` |
+| `https://app.<ip>.sslip.io` | Modern site | none |
+| `https://legacy.<ip>.sslip.io` | Legacy site | none |
+| `https://grafana.<ip>.sslip.io` | Dashboards | view without login; `admin` to edit |
+| `https://jaeger.`, `chaos.`, `rollouts.`, `prometheus.`, `alertmanager.<ip>.sslip.io` | Operator tools | `admin` and the password from `./lab.sh info` |
 
 You still need SSH for the terminal that runs the demo commands.
+
+If `./lab.sh info` still shows `http://` addresses, the certificates have not been issued yet; `./lab.sh preflight` says why (usually port 80 or 443 closed in the security group).
 
 ## 6. Access for Claude (option A only)
 
@@ -97,6 +101,7 @@ The key can only run commands on that one VM and start or stop it. Delete the us
 
 - **Port 22 blocked on the guest Wi-Fi:** use the browser shell instead: EC2 → select the instance → **Connect** → **Session Manager**. It runs over HTTPS. Then `sudo -i -u ubuntu` and `cd /opt/kai-workshop`.
 - **The sslip.io names do not resolve:** a few corporate DNS filters block wildcard DNS services. Use your phone hotspot, or set your own domain: point a wildcard record `*.lab.example.com` at the Elastic IP, put `LAB_DOMAIN=lab.example.com` in `lab.env`, and run `./lab.sh update-ip`.
+- **A page does not open over `https://`, or shows a certificate warning:** use the same address with `http://`, then run `./lab.sh preflight`.
 - **Test it the day before** from a network other than your office, ideally from your phone on mobile data.
 
 ## 8. Cost and stopping

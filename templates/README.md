@@ -1,25 +1,25 @@
-# Templat
+# Templates
 
-Templat ini menyertai sesi **Mencapai ketersediaan 99,9% ke atas**. Semuanya berupa Markdown biasa supaya mudah disalin ke Confluence, SharePoint, Notion, wiki Git, atau dokumen apa pun yang dipakai tim. Contoh isian memakai aplikasi fiktif RelNusa dari lab; ganti dengan layanan Anda sendiri.
+These templates accompany the session **Achieving 99.9% Availability and Beyond**. They are all plain Markdown, so they are easy to copy into Confluence, SharePoint, Notion, a Git wiki or whatever document your team uses. The examples use the fictional RelNusa application from the lab; replace them with your own services.
 
-| Templat | Dipakai untuk | Kapan |
+| Template | Used for | When |
 |---|---|---|
-| [Lembar desain sistem](lembar-desain-sistem.md) | Target per perjalanan, hitungan rantai ketersediaan, domain kegagalan, kapasitas menit tersibuk, konsistensi data, susunan teknologi dan sepuluh pertanyaan tinjauan desain | Sebelum membangun atau memodernisasi sistem, dan di setiap tinjauan arsitektur |
-| [Lembar kerja SLO](lembar-kerja-slo.md) | Menurunkan SLI, SLO, error budget dan ambang peringatan dari satu perjalanan pengguna | Saat menetapkan atau meninjau SLO |
-| [Kebijakan error budget](kebijakan-error-budget.md) | Aturan rilis yang disepakati bisnis dan TI bila jatah gangguan menipis | Sekali, sebelum insiden berikutnya; ditinjau tiap kuartal |
-| [Matriks tingkat keparahan](matriks-keparahan.md) | Tingkat keparahan insiden, peran, target respons dan pola komunikasi | Sekali, lalu dipakai di setiap insiden |
-| [Runbook peringatan](runbook-peringatan.md) | Langkah diagnosis dan pemulihan untuk satu peringatan | Untuk setiap peringatan yang bisa membangunkan orang |
-| [Postmortem](postmortem.md) | Laporan insiden tanpa menyalahkan, dengan tindak lanjut yang terukur | Setelah setiap insiden Sev1 dan Sev2, dan setiap game day |
-| [Rencana game day](rencana-game-day.md) | Latihan gangguan yang direncanakan dan aman | Minimal satu kali per kuartal |
-| [Kartu penilaian modernisasi](kartu-penilaian-modernisasi.md) | Menilai aplikasi dan memilih fungsi pertama yang dipisahkan dari monolit | Saat menyusun rencana modernisasi |
-| [Rencana 90 hari](rencana-90-hari.md) | Langkah 30, 60 dan 90 hari untuk memulai SRE | Di awal program |
+| [System design worksheet](system-design-worksheet.md) | Targets per journey, availability chain math, failure domains, busiest-minute capacity, data consistency, the technology stack and the ten design review questions | Before building or modernizing a system, and at every architecture review |
+| [SLO worksheet](slo-worksheet.md) | Deriving SLIs, SLOs, error budgets and alert thresholds from one user journey | When setting or reviewing SLOs |
+| [Error budget policy](error-budget-policy.md) | Release rules agreed by the business and IT for when the failure allowance runs low | Once, before the next incident; reviewed every quarter |
+| [Severity matrix](severity-matrix.md) | Incident severity levels, roles, response targets and communication patterns | Once, then used in every incident |
+| [Alert runbook](alert-runbook.md) | Diagnosis and recovery steps for one alert | For every alert that can wake someone up |
+| [Postmortem](postmortem.md) | Blameless incident reports with measurable follow-up | After every Sev1 and Sev2 incident, and after every game day |
+| [Game day plan](game-day-plan.md) | Planned, safe failure drills | At least once a quarter |
+| [Modernization scorecard](modernization-scorecard.md) | Assessing applications and choosing the first function to separate from the monolith | When drawing up a modernization plan |
+| [90-day plan](90-day-plan.md) | The 30-, 60- and 90-day steps for getting started with SRE | At the start of the program |
 
-## Cara memakai
+## How to use them
 
-1. Untuk sistem baru atau sistem yang akan dimodernisasi, isi dulu **lembar desain sistem**: target, hitungan dan risiko sebelum memilih teknologi.
-2. Mulai dari **lembar kerja SLO** untuk satu perjalanan pengguna saja. Satu SLO yang dipakai lebih berguna daripada sepuluh yang hanya tertulis.
-3. Sepakati **kebijakan error budget** dan **matriks tingkat keparahan** dengan pemilik bisnis sebelum ada insiden besar. Keputusan yang disepakati saat tenang jauh lebih mudah dijalankan saat panik.
-4. Tulis **runbook** untuk setiap peringatan berseverity *page*. Peringatan tanpa runbook sebaiknya diturunkan menjadi tiket.
-5. Latih semuanya lewat **game day**, lalu perbaiki templat ini berdasarkan temuan latihan.
+1. For a new system or one about to be modernized, start with the **system design worksheet**: targets, math and risks before choosing technology.
+2. Start the **SLO worksheet** with just one user journey. One SLO that is used is worth more than ten that only exist on paper.
+3. Agree on the **error budget policy** and the **severity matrix** with the business owner before the next major incident. Decisions agreed in calm times are much easier to carry out in a crisis.
+4. Write a **runbook** for every alert with *page* severity. An alert without a runbook should be downgraded to a ticket.
+5. Practice all of it through **game days**, then improve these templates based on what the drills reveal.
 
-Bagian yang perlu diisi ditandai dengan `[...]`. Angka contoh hanya ilustrasi.
+Fields to fill in are marked `[...]`. Example figures are for illustration only.

@@ -3,7 +3,7 @@
 apiVersion: chaos-mesh.org/v1alpha1
 kind: PodChaos
 metadata:
-  name: matikan-db-primary
+  name: kill-db-primary
   namespace: modern
 spec:
   action: pod-kill

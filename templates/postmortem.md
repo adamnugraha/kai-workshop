@@ -1,81 +1,81 @@
-# Postmortem: `[judul singkat insiden]`
+# Postmortem: `[short incident title]`
 
-> Postmortem ini tanpa menyalahkan. Tujuannya memahami bagaimana sistem dan proses memungkinkan insiden terjadi, bukan mencari siapa yang salah. Orang yang terlibat menjelaskan apa yang mereka ketahui dan putuskan pada saat itu; keputusan yang masuk akal dengan informasi saat itu tidak dinilai dengan pengetahuan sesudahnya.
+> This postmortem is blameless. Its purpose is to understand how our systems and processes allowed the incident to happen, not to find who was at fault. The people involved describe what they knew and decided at the time; decisions that were reasonable with the information available then are not judged with hindsight.
 
 | | |
 |---|---|
-| Tanggal insiden | `[...]` |
-| Tingkat keparahan | `[Sev1 / Sev2 / Sev3]` |
-| Status | `[draf / ditinjau / final]` |
-| Penulis | `[...]` |
+| Incident date | `[...]` |
+| Severity | `[Sev1 / Sev2 / Sev3]` |
+| Status | `[draft / in review / final]` |
+| Author | `[...]` |
 | Incident commander | `[...]` |
-| Peninjau | `[...]` |
+| Reviewers | `[...]` |
 
-## Ringkasan
+## Summary
 
-`[Tiga sampai lima kalimat: apa yang terjadi, siapa terdampak, berapa lama, apa penyebab utamanya, bagaimana dipulihkan.]`
+`[Three to five sentences: what happened, who was affected, for how long, what the main cause was, and how service was restored.]`
 
-## Dampak
+## Impact
 
-| Ukuran | Nilai |
+| Measure | Value |
 |---|---|
-| Mulai terdampak | `[jam WIB]` |
-| Terdeteksi | `[jam WIB]` (selang dari mulai: `[menit]`) |
-| Pulih | `[jam WIB]` (lama gangguan: `[menit]`) |
-| Pengguna atau transaksi terdampak | `[jumlah atau persentase]` |
-| Error budget terpakai | `[persen dari jatah 30 hari]` untuk SLO `[...]` |
-| Dampak bisnis | `[pendapatan, kompensasi, keluhan, reputasi]` |
+| Impact started | `[time WIB]` |
+| Detected | `[time WIB]` (time since start: `[minutes]`) |
+| Recovered | `[time WIB]` (outage duration: `[minutes]`) |
+| Users or transactions affected | `[number or percentage]` |
+| Error budget used | `[percent of the 30-day budget]` for the `[...]` SLO |
+| Business impact | `[revenue, compensation, complaints, reputation]` |
 
-## Kronologi
+## Timeline
 
-Semua waktu dalam WIB. Sertakan sinyal yang terlihat saat itu (peringatan, grafik, laporan pengguna) dan keputusan yang diambil.
+All times in WIB (UTC+7). Include the signals visible at the time (alerts, graphs, user reports) and the decisions taken.
 
-| Waktu | Kejadian |
+| Time | Event |
 |---|---|
-| `[hh:mm]` | `[perubahan atau pemicu]` |
-| `[hh:mm]` | `[peringatan menyala / laporan pertama masuk]` |
-| `[hh:mm]` | `[incident commander ditetapkan, tingkat keparahan]` |
-| `[hh:mm]` | `[langkah diagnosis dan temuan]` |
-| `[hh:mm]` | `[langkah pemulihan]` |
-| `[hh:mm]` | `[pulih, mulai dipantau]` |
-| `[hh:mm]` | `[insiden dinyatakan selesai]` |
+| `[hh:mm]` | `[change or trigger]` |
+| `[hh:mm]` | `[alert fired / first report received]` |
+| `[hh:mm]` | `[incident commander assigned, severity set]` |
+| `[hh:mm]` | `[diagnosis steps and findings]` |
+| `[hh:mm]` | `[recovery steps]` |
+| `[hh:mm]` | `[recovered, monitoring started]` |
+| `[hh:mm]` | `[incident declared over]` |
 
-## Penyebab dan faktor pendukung
+## Causes and contributing factors
 
-**Pemicu.** `[Kejadian yang memulai insiden, misalnya rilis, lonjakan trafik, gangguan mitra.]`
+**Trigger.** `[The event that started the incident, for example a release, a traffic surge or a partner outage.]`
 
-**Penyebab mendasar.** `[Mengapa pemicu itu bisa menimbulkan dampak sebesar ini. Tanyakan "mengapa" beberapa kali sampai sampai ke kondisi sistem atau proses.]`
+**Root cause.** `[Why the trigger could cause this much impact. Ask "why" several times until you reach a condition of the system or the process.]`
 
-**Faktor pendukung.** `[Hal-hal yang memperbesar dampak atau memperlambat pemulihan: tidak ada timeout, peringatan terlambat, runbook usang, akses darurat lambat, dsb.]`
+**Contributing factors.** `[Things that made the impact larger or the recovery slower: no timeouts, late alerts, an outdated runbook, slow emergency access, and so on.]`
 
-## Deteksi dan respons
+## Detection and response
 
-- Bagaimana insiden diketahui? `[peringatan SLO / laporan pengguna / kebetulan]`
-- Apakah peringatan yang tepat menyala pada waktu yang tepat? `[...]`
-- Apakah runbook tersedia dan bisa diikuti? `[...]`
-- Apa yang memperlambat pemulihan? `[...]`
+- How was the incident discovered? `[SLO alert / user report / by chance]`
+- Did the right alert fire at the right time? `[...]`
+- Was a runbook available, and could it be followed? `[...]`
+- What slowed down recovery? `[...]`
 
-## Yang berjalan baik, yang kurang, dan yang kebetulan
+## What went well, what did not, and where we got lucky
 
-| Berjalan baik | Kurang baik | Kebetulan menguntungkan |
+| Went well | Did not go well | Where we got lucky |
 |---|---|---|
 | `[...]` | `[...]` | `[...]` |
 
-## Tindak lanjut
+## Action items
 
-Setiap tindak lanjut punya pemilik, tenggat dan tiket. Utamakan tindakan yang mencegah terulangnya insiden atau mempercepat deteksi, bukan sekadar "lebih berhati-hati".
+Every action item has an owner, a due date and a ticket. Favor actions that prevent a recurrence or speed up detection over "be more careful".
 
-| Tindakan | Jenis | Prioritas | Pemilik | Tenggat | Tiket |
+| Action | Type | Priority | Owner | Due date | Ticket |
 |---|---|---|---|---|---|
-| `[...]` | `[cegah / deteksi / mitigasi / proses]` | `[tinggi / sedang / rendah]` | `[...]` | `[...]` | `[...]` |
+| `[...]` | `[prevent / detect / mitigate / process]` | `[high / medium / low]` | `[...]` | `[...]` | `[...]` |
 
-## Pelajaran
+## Lessons learned
 
-`[Hal yang perlu diketahui tim lain. Postmortem yang dibagikan luas mencegah tim lain mengalami insiden yang sama.]`
+`[What other teams should know. A widely shared postmortem keeps other teams from having the same incident.]`
 
 ---
 
-Tips menulis:
-- Tulis draf dalam 5 hari kerja selagi ingatan masih segar; kronologi bisa diambil dari kanal koordinasi dan catatan pencatat.
-- Rapat tinjauan cukup 30–60 menit. Fokus pada tindak lanjut, bukan pada kronologi.
-- Lacak penyelesaian tindak lanjut setiap bulan; postmortem tanpa tindak lanjut yang selesai hanya menjadi arsip.
+Writing tips:
+- Write the draft within 5 business days while memories are fresh; the timeline can be taken from the coordination channel and the scribe's notes.
+- A review meeting of 30–60 minutes is enough. Focus on the action items, not on the timeline.
+- Track the completion of action items every month; a postmortem without completed actions simply becomes an archive.

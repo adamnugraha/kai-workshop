@@ -1,6 +1,6 @@
 # Running the lab on your own server
 
-Any Linux machine works if it meets the checks below: a VPS, a VM in your data centre, VMware, Proxmox or a bare-metal box. Cloud guides: [AWS](aws-setup.md), [GCP](gcp-setup.md). Alerts: [Telegram](telegram-setup.md).
+Any Linux machine works if it meets the checks below: a VPS, a VM in your data center, VMware, Proxmox or a bare-metal box. Cloud guides: [AWS](aws-setup.md), [GCP](gcp-setup.md). Alerts: [Telegram](telegram-setup.md).
 
 ## 1. Check the machine first
 
@@ -19,7 +19,7 @@ curl -s https://checkip.amazonaws.com    # the public IP the internet sees for t
 | If | Then |
 |---|---|
 | It is an LXC or OpenVZ container | Use a full VM; Kubernetes in Docker does not run reliably inside those containers |
-| `sch_netem` cannot be loaded | Everything works, but use `./lab.sh bank slow` instead of `./lab.sh chaos bank-lambat` in demo 4 |
+| `sch_netem` cannot be loaded | Everything works, but use `./lab.sh bank slow` instead of `./lab.sh chaos bank-slow` in demo 4 |
 | Port 80 or 9090 is already in use (for example your own Prometheus) | Set `HTTP_PORT` and `PROM_PORT` in `lab.env` before installing (step 3). HTTPS needs port 80, so it stays off when `HTTP_PORT` is something else |
 | Port 443 is already in use | Everything works over plain HTTP; set `LAB_HTTPS=off` in `lab.env` to skip HTTPS |
 | The server also runs production workloads | Prefer a separate VM. The lab starts about 40 containers and the load tests use all CPUs for a few minutes |

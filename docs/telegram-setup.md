@@ -17,7 +17,7 @@ The lab sends SLO alerts (and only those) to Telegram through Alertmanager. Setu
 | **Channel** (recommended for the audience) | Many people watching; only the bot posts | Subscribers do not see each other. The bot must be an **administrator** of the channel with permission to post |
 | **Group** | A small team that wants to discuss alerts | Members see each other's names. The bot only needs to be a member |
 
-**Channel:** Telegram → New Channel → name it (for example `RelNusa Lab · Peringatan`) → Private → skip adding people. Channel → Administrators → Add Admin → search the bot's username → keep **Post Messages** on → Save. Then post any message in the channel, for example `halo`.
+**Channel:** Telegram → New Channel → name it (for example `RelNusa Lab · Alerts`) → Private → skip adding people. Channel → Administrators → Add Admin → search the bot's username → keep **Post Messages** on → Save. Then post any message in the channel, for example `hello`.
 
 **Group:** New Group → add the bot → create. Then send any message in the group.
 

@@ -2,7 +2,7 @@
 apiVersion: chaos-mesh.org/v1alpha1
 kind: PodChaos
 metadata:
-  name: matikan-search
+  name: kill-search
   namespace: modern
 spec:
   action: pod-kill

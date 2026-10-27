@@ -13,17 +13,17 @@ metadata:
   namespace: observability
 spec:
   groups:
-  - name: sloth-slo-sli-recordings-relnusa-modern-ketersediaan
+  - name: sloth-slo-sli-recordings-relnusa-modern-availability
     rules:
     - expr: |
         ((sum(rate(traefik_router_requests_total{router=~"modern-app-.*",code=~"5.."}[5m])) or vector(0)))
         /
         (sum(rate(traefik_router_requests_total{router=~"modern-app-.*"}[5m])))
       labels:
-        arsitektur: modern
-        sloth_id: relnusa-modern-ketersediaan
+        architecture: modern
+        sloth_id: relnusa-modern-availability
         sloth_service: relnusa-modern
-        sloth_slo: ketersediaan
+        sloth_slo: availability
         sloth_window: 5m
         team: relnusa
       record: slo:sli_error:ratio_rate5m
@@ -32,10 +32,10 @@ spec:
         /
         (sum(rate(traefik_router_requests_total{router=~"modern-app-.*"}[30m])))
       labels:
-        arsitektur: modern
-        sloth_id: relnusa-modern-ketersediaan
+        architecture: modern
+        sloth_id: relnusa-modern-availability
         sloth_service: relnusa-modern
-        sloth_slo: ketersediaan
+        sloth_slo: availability
         sloth_window: 30m
         team: relnusa
       record: slo:sli_error:ratio_rate30m
@@ -44,10 +44,10 @@ spec:
         /
         (sum(rate(traefik_router_requests_total{router=~"modern-app-.*"}[1h])))
       labels:
-        arsitektur: modern
-        sloth_id: relnusa-modern-ketersediaan
+        architecture: modern
+        sloth_id: relnusa-modern-availability
         sloth_service: relnusa-modern
-        sloth_slo: ketersediaan
+        sloth_slo: availability
         sloth_window: 1h
         team: relnusa
       record: slo:sli_error:ratio_rate1h
@@ -56,10 +56,10 @@ spec:
         /
         (sum(rate(traefik_router_requests_total{router=~"modern-app-.*"}[2h])))
       labels:
-        arsitektur: modern
-        sloth_id: relnusa-modern-ketersediaan
+        architecture: modern
+        sloth_id: relnusa-modern-availability
         sloth_service: relnusa-modern
-        sloth_slo: ketersediaan
+        sloth_slo: availability
         sloth_window: 2h
         team: relnusa
       record: slo:sli_error:ratio_rate2h
@@ -68,10 +68,10 @@ spec:
         /
         (sum(rate(traefik_router_requests_total{router=~"modern-app-.*"}[6h])))
       labels:
-        arsitektur: modern
-        sloth_id: relnusa-modern-ketersediaan
+        architecture: modern
+        sloth_id: relnusa-modern-availability
         sloth_service: relnusa-modern
-        sloth_slo: ketersediaan
+        sloth_slo: availability
         sloth_window: 6h
         team: relnusa
       record: slo:sli_error:ratio_rate6h
@@ -80,10 +80,10 @@ spec:
         /
         (sum(rate(traefik_router_requests_total{router=~"modern-app-.*"}[1d])))
       labels:
-        arsitektur: modern
-        sloth_id: relnusa-modern-ketersediaan
+        architecture: modern
+        sloth_id: relnusa-modern-availability
         sloth_service: relnusa-modern
-        sloth_slo: ketersediaan
+        sloth_slo: availability
         sloth_window: 1d
         team: relnusa
       record: slo:sli_error:ratio_rate1d
@@ -92,143 +92,143 @@ spec:
         /
         (sum(rate(traefik_router_requests_total{router=~"modern-app-.*"}[3d])))
       labels:
-        arsitektur: modern
-        sloth_id: relnusa-modern-ketersediaan
+        architecture: modern
+        sloth_id: relnusa-modern-availability
         sloth_service: relnusa-modern
-        sloth_slo: ketersediaan
+        sloth_slo: availability
         sloth_window: 3d
         team: relnusa
       record: slo:sli_error:ratio_rate3d
     - expr: |
-        sum_over_time(slo:sli_error:ratio_rate5m{sloth_id="relnusa-modern-ketersediaan", sloth_service="relnusa-modern", sloth_slo="ketersediaan"}[30d])
+        sum_over_time(slo:sli_error:ratio_rate5m{sloth_id="relnusa-modern-availability", sloth_service="relnusa-modern", sloth_slo="availability"}[30d])
         / ignoring (sloth_window)
-        count_over_time(slo:sli_error:ratio_rate5m{sloth_id="relnusa-modern-ketersediaan", sloth_service="relnusa-modern", sloth_slo="ketersediaan"}[30d])
+        count_over_time(slo:sli_error:ratio_rate5m{sloth_id="relnusa-modern-availability", sloth_service="relnusa-modern", sloth_slo="availability"}[30d])
       labels:
-        arsitektur: modern
-        sloth_id: relnusa-modern-ketersediaan
+        architecture: modern
+        sloth_id: relnusa-modern-availability
         sloth_service: relnusa-modern
-        sloth_slo: ketersediaan
+        sloth_slo: availability
         sloth_window: 30d
         team: relnusa
       record: slo:sli_error:ratio_rate30d
-  - name: sloth-slo-meta-recordings-relnusa-modern-ketersediaan
+  - name: sloth-slo-meta-recordings-relnusa-modern-availability
     rules:
     - expr: vector(0.9990000000000001)
       labels:
-        arsitektur: modern
-        sloth_id: relnusa-modern-ketersediaan
+        architecture: modern
+        sloth_id: relnusa-modern-availability
         sloth_service: relnusa-modern
-        sloth_slo: ketersediaan
+        sloth_slo: availability
         team: relnusa
       record: slo:objective:ratio
     - expr: vector(1-0.9990000000000001)
       labels:
-        arsitektur: modern
-        sloth_id: relnusa-modern-ketersediaan
+        architecture: modern
+        sloth_id: relnusa-modern-availability
         sloth_service: relnusa-modern
-        sloth_slo: ketersediaan
+        sloth_slo: availability
         team: relnusa
       record: slo:error_budget:ratio
     - expr: vector(30)
       labels:
-        arsitektur: modern
-        sloth_id: relnusa-modern-ketersediaan
+        architecture: modern
+        sloth_id: relnusa-modern-availability
         sloth_service: relnusa-modern
-        sloth_slo: ketersediaan
+        sloth_slo: availability
         team: relnusa
       record: slo:time_period:days
     - expr: |
-        slo:sli_error:ratio_rate5m{sloth_id="relnusa-modern-ketersediaan", sloth_service="relnusa-modern", sloth_slo="ketersediaan"}
+        slo:sli_error:ratio_rate5m{sloth_id="relnusa-modern-availability", sloth_service="relnusa-modern", sloth_slo="availability"}
         / on(sloth_id, sloth_slo, sloth_service) group_left
-        slo:error_budget:ratio{sloth_id="relnusa-modern-ketersediaan", sloth_service="relnusa-modern", sloth_slo="ketersediaan"}
+        slo:error_budget:ratio{sloth_id="relnusa-modern-availability", sloth_service="relnusa-modern", sloth_slo="availability"}
       labels:
-        arsitektur: modern
-        sloth_id: relnusa-modern-ketersediaan
+        architecture: modern
+        sloth_id: relnusa-modern-availability
         sloth_service: relnusa-modern
-        sloth_slo: ketersediaan
+        sloth_slo: availability
         team: relnusa
       record: slo:current_burn_rate:ratio
     - expr: |
-        slo:sli_error:ratio_rate30d{sloth_id="relnusa-modern-ketersediaan", sloth_service="relnusa-modern", sloth_slo="ketersediaan"}
+        slo:sli_error:ratio_rate30d{sloth_id="relnusa-modern-availability", sloth_service="relnusa-modern", sloth_slo="availability"}
         / on(sloth_id, sloth_slo, sloth_service) group_left
-        slo:error_budget:ratio{sloth_id="relnusa-modern-ketersediaan", sloth_service="relnusa-modern", sloth_slo="ketersediaan"}
+        slo:error_budget:ratio{sloth_id="relnusa-modern-availability", sloth_service="relnusa-modern", sloth_slo="availability"}
       labels:
-        arsitektur: modern
-        sloth_id: relnusa-modern-ketersediaan
+        architecture: modern
+        sloth_id: relnusa-modern-availability
         sloth_service: relnusa-modern
-        sloth_slo: ketersediaan
+        sloth_slo: availability
         team: relnusa
       record: slo:period_burn_rate:ratio
-    - expr: 1 - slo:period_burn_rate:ratio{sloth_id="relnusa-modern-ketersediaan",
-        sloth_service="relnusa-modern", sloth_slo="ketersediaan"}
+    - expr: 1 - slo:period_burn_rate:ratio{sloth_id="relnusa-modern-availability",
+        sloth_service="relnusa-modern", sloth_slo="availability"}
       labels:
-        arsitektur: modern
-        sloth_id: relnusa-modern-ketersediaan
+        architecture: modern
+        sloth_id: relnusa-modern-availability
         sloth_service: relnusa-modern
-        sloth_slo: ketersediaan
+        sloth_slo: availability
         team: relnusa
       record: slo:period_error_budget_remaining:ratio
     - expr: vector(1)
       labels:
-        arsitektur: modern
-        sloth_id: relnusa-modern-ketersediaan
+        architecture: modern
+        sloth_id: relnusa-modern-availability
         sloth_mode: cli-gen-k8s
         sloth_objective: "99.9"
         sloth_service: relnusa-modern
-        sloth_slo: ketersediaan
+        sloth_slo: availability
         sloth_spec: sloth.slok.dev/v1
         sloth_version: v0.16.0
         team: relnusa
       record: sloth_slo_info
-  - name: sloth-slo-alerts-relnusa-modern-ketersediaan
+  - name: sloth-slo-alerts-relnusa-modern-availability
     rules:
-    - alert: RelnusaModernKetersediaan
+    - alert: RelnusaModernAvailability
       annotations:
-        runbook: Lihat dasbor RelNusa 2 · SLO, lalu runbook 'Ketersediaan turun' di
-          repo.
-        summary: Error budget ketersediaan (target 99,9%) terpakai jauh lebih cepat
-          dari normal.
-        title: Ketersediaan aplikasi modern turun
+        runbook: Open Grafana RelNusa 2 (SLOs and error budgets), then RelNusa 3 to
+          find the failing component.
+        summary: The availability error budget (target 99.9%) is being used much faster
+          than normal.
+        title: Modern app availability is dropping
       expr: |
         (
-            max(slo:sli_error:ratio_rate5m{sloth_id="relnusa-modern-ketersediaan", sloth_service="relnusa-modern", sloth_slo="ketersediaan"} > (14.4 * 0.0009999999999999432)) without (sloth_window)
+            max(slo:sli_error:ratio_rate5m{sloth_id="relnusa-modern-availability", sloth_service="relnusa-modern", sloth_slo="availability"} > (14.4 * 0.0009999999999999432)) without (sloth_window)
             and
-            max(slo:sli_error:ratio_rate1h{sloth_id="relnusa-modern-ketersediaan", sloth_service="relnusa-modern", sloth_slo="ketersediaan"} > (14.4 * 0.0009999999999999432)) without (sloth_window)
+            max(slo:sli_error:ratio_rate1h{sloth_id="relnusa-modern-availability", sloth_service="relnusa-modern", sloth_slo="availability"} > (14.4 * 0.0009999999999999432)) without (sloth_window)
         )
         or
         (
-            max(slo:sli_error:ratio_rate30m{sloth_id="relnusa-modern-ketersediaan", sloth_service="relnusa-modern", sloth_slo="ketersediaan"} > (6 * 0.0009999999999999432)) without (sloth_window)
+            max(slo:sli_error:ratio_rate30m{sloth_id="relnusa-modern-availability", sloth_service="relnusa-modern", sloth_slo="availability"} > (6 * 0.0009999999999999432)) without (sloth_window)
             and
-            max(slo:sli_error:ratio_rate6h{sloth_id="relnusa-modern-ketersediaan", sloth_service="relnusa-modern", sloth_slo="ketersediaan"} > (6 * 0.0009999999999999432)) without (sloth_window)
+            max(slo:sli_error:ratio_rate6h{sloth_id="relnusa-modern-availability", sloth_service="relnusa-modern", sloth_slo="availability"} > (6 * 0.0009999999999999432)) without (sloth_window)
         )
       labels:
         category: availability
         severity: page
         sloth_severity: page
-    - alert: RelnusaModernKetersediaan
+    - alert: RelnusaModernAvailability
       annotations:
-        runbook: Lihat dasbor RelNusa 2 · SLO, lalu runbook 'Ketersediaan turun' di
-          repo.
-        summary: Error budget ketersediaan (target 99,9%) terpakai jauh lebih cepat
-          dari normal.
-        title: Ketersediaan aplikasi modern turun
+        runbook: Open Grafana RelNusa 2 (SLOs and error budgets), then RelNusa 3 to
+          find the failing component.
+        summary: The availability error budget (target 99.9%) is being used much faster
+          than normal.
+        title: Modern app availability is dropping
       expr: |
         (
-            max(slo:sli_error:ratio_rate2h{sloth_id="relnusa-modern-ketersediaan", sloth_service="relnusa-modern", sloth_slo="ketersediaan"} > (3 * 0.0009999999999999432)) without (sloth_window)
+            max(slo:sli_error:ratio_rate2h{sloth_id="relnusa-modern-availability", sloth_service="relnusa-modern", sloth_slo="availability"} > (3 * 0.0009999999999999432)) without (sloth_window)
             and
-            max(slo:sli_error:ratio_rate1d{sloth_id="relnusa-modern-ketersediaan", sloth_service="relnusa-modern", sloth_slo="ketersediaan"} > (3 * 0.0009999999999999432)) without (sloth_window)
+            max(slo:sli_error:ratio_rate1d{sloth_id="relnusa-modern-availability", sloth_service="relnusa-modern", sloth_slo="availability"} > (3 * 0.0009999999999999432)) without (sloth_window)
         )
         or
         (
-            max(slo:sli_error:ratio_rate6h{sloth_id="relnusa-modern-ketersediaan", sloth_service="relnusa-modern", sloth_slo="ketersediaan"} > (1 * 0.0009999999999999432)) without (sloth_window)
+            max(slo:sli_error:ratio_rate6h{sloth_id="relnusa-modern-availability", sloth_service="relnusa-modern", sloth_slo="availability"} > (1 * 0.0009999999999999432)) without (sloth_window)
             and
-            max(slo:sli_error:ratio_rate3d{sloth_id="relnusa-modern-ketersediaan", sloth_service="relnusa-modern", sloth_slo="ketersediaan"} > (1 * 0.0009999999999999432)) without (sloth_window)
+            max(slo:sli_error:ratio_rate3d{sloth_id="relnusa-modern-availability", sloth_service="relnusa-modern", sloth_slo="availability"} > (1 * 0.0009999999999999432)) without (sloth_window)
         )
       labels:
         category: availability
         severity: ticket
         sloth_severity: ticket
-  - name: sloth-slo-sli-recordings-relnusa-modern-latensi
+  - name: sloth-slo-sli-recordings-relnusa-modern-latency
     rules:
     - expr: |
         ((
@@ -240,10 +240,10 @@ spec:
         /
         (sum(rate(traefik_router_request_duration_seconds_count{router=~"modern-app-.*"}[5m])))
       labels:
-        arsitektur: modern
-        sloth_id: relnusa-modern-latensi
+        architecture: modern
+        sloth_id: relnusa-modern-latency
         sloth_service: relnusa-modern
-        sloth_slo: latensi
+        sloth_slo: latency
         sloth_window: 5m
         team: relnusa
       record: slo:sli_error:ratio_rate5m
@@ -257,10 +257,10 @@ spec:
         /
         (sum(rate(traefik_router_request_duration_seconds_count{router=~"modern-app-.*"}[30m])))
       labels:
-        arsitektur: modern
-        sloth_id: relnusa-modern-latensi
+        architecture: modern
+        sloth_id: relnusa-modern-latency
         sloth_service: relnusa-modern
-        sloth_slo: latensi
+        sloth_slo: latency
         sloth_window: 30m
         team: relnusa
       record: slo:sli_error:ratio_rate30m
@@ -274,10 +274,10 @@ spec:
         /
         (sum(rate(traefik_router_request_duration_seconds_count{router=~"modern-app-.*"}[1h])))
       labels:
-        arsitektur: modern
-        sloth_id: relnusa-modern-latensi
+        architecture: modern
+        sloth_id: relnusa-modern-latency
         sloth_service: relnusa-modern
-        sloth_slo: latensi
+        sloth_slo: latency
         sloth_window: 1h
         team: relnusa
       record: slo:sli_error:ratio_rate1h
@@ -291,10 +291,10 @@ spec:
         /
         (sum(rate(traefik_router_request_duration_seconds_count{router=~"modern-app-.*"}[2h])))
       labels:
-        arsitektur: modern
-        sloth_id: relnusa-modern-latensi
+        architecture: modern
+        sloth_id: relnusa-modern-latency
         sloth_service: relnusa-modern
-        sloth_slo: latensi
+        sloth_slo: latency
         sloth_window: 2h
         team: relnusa
       record: slo:sli_error:ratio_rate2h
@@ -308,10 +308,10 @@ spec:
         /
         (sum(rate(traefik_router_request_duration_seconds_count{router=~"modern-app-.*"}[6h])))
       labels:
-        arsitektur: modern
-        sloth_id: relnusa-modern-latensi
+        architecture: modern
+        sloth_id: relnusa-modern-latency
         sloth_service: relnusa-modern
-        sloth_slo: latensi
+        sloth_slo: latency
         sloth_window: 6h
         team: relnusa
       record: slo:sli_error:ratio_rate6h
@@ -325,10 +325,10 @@ spec:
         /
         (sum(rate(traefik_router_request_duration_seconds_count{router=~"modern-app-.*"}[1d])))
       labels:
-        arsitektur: modern
-        sloth_id: relnusa-modern-latensi
+        architecture: modern
+        sloth_id: relnusa-modern-latency
         sloth_service: relnusa-modern
-        sloth_slo: latensi
+        sloth_slo: latency
         sloth_window: 1d
         team: relnusa
       record: slo:sli_error:ratio_rate1d
@@ -342,149 +342,149 @@ spec:
         /
         (sum(rate(traefik_router_request_duration_seconds_count{router=~"modern-app-.*"}[3d])))
       labels:
-        arsitektur: modern
-        sloth_id: relnusa-modern-latensi
+        architecture: modern
+        sloth_id: relnusa-modern-latency
         sloth_service: relnusa-modern
-        sloth_slo: latensi
+        sloth_slo: latency
         sloth_window: 3d
         team: relnusa
       record: slo:sli_error:ratio_rate3d
     - expr: |
-        sum_over_time(slo:sli_error:ratio_rate5m{sloth_id="relnusa-modern-latensi", sloth_service="relnusa-modern", sloth_slo="latensi"}[30d])
+        sum_over_time(slo:sli_error:ratio_rate5m{sloth_id="relnusa-modern-latency", sloth_service="relnusa-modern", sloth_slo="latency"}[30d])
         / ignoring (sloth_window)
-        count_over_time(slo:sli_error:ratio_rate5m{sloth_id="relnusa-modern-latensi", sloth_service="relnusa-modern", sloth_slo="latensi"}[30d])
+        count_over_time(slo:sli_error:ratio_rate5m{sloth_id="relnusa-modern-latency", sloth_service="relnusa-modern", sloth_slo="latency"}[30d])
       labels:
-        arsitektur: modern
-        sloth_id: relnusa-modern-latensi
+        architecture: modern
+        sloth_id: relnusa-modern-latency
         sloth_service: relnusa-modern
-        sloth_slo: latensi
+        sloth_slo: latency
         sloth_window: 30d
         team: relnusa
       record: slo:sli_error:ratio_rate30d
-  - name: sloth-slo-meta-recordings-relnusa-modern-latensi
+  - name: sloth-slo-meta-recordings-relnusa-modern-latency
     rules:
     - expr: vector(0.99)
       labels:
-        arsitektur: modern
-        sloth_id: relnusa-modern-latensi
+        architecture: modern
+        sloth_id: relnusa-modern-latency
         sloth_service: relnusa-modern
-        sloth_slo: latensi
+        sloth_slo: latency
         team: relnusa
       record: slo:objective:ratio
     - expr: vector(1-0.99)
       labels:
-        arsitektur: modern
-        sloth_id: relnusa-modern-latensi
+        architecture: modern
+        sloth_id: relnusa-modern-latency
         sloth_service: relnusa-modern
-        sloth_slo: latensi
+        sloth_slo: latency
         team: relnusa
       record: slo:error_budget:ratio
     - expr: vector(30)
       labels:
-        arsitektur: modern
-        sloth_id: relnusa-modern-latensi
+        architecture: modern
+        sloth_id: relnusa-modern-latency
         sloth_service: relnusa-modern
-        sloth_slo: latensi
+        sloth_slo: latency
         team: relnusa
       record: slo:time_period:days
     - expr: |
-        slo:sli_error:ratio_rate5m{sloth_id="relnusa-modern-latensi", sloth_service="relnusa-modern", sloth_slo="latensi"}
+        slo:sli_error:ratio_rate5m{sloth_id="relnusa-modern-latency", sloth_service="relnusa-modern", sloth_slo="latency"}
         / on(sloth_id, sloth_slo, sloth_service) group_left
-        slo:error_budget:ratio{sloth_id="relnusa-modern-latensi", sloth_service="relnusa-modern", sloth_slo="latensi"}
+        slo:error_budget:ratio{sloth_id="relnusa-modern-latency", sloth_service="relnusa-modern", sloth_slo="latency"}
       labels:
-        arsitektur: modern
-        sloth_id: relnusa-modern-latensi
+        architecture: modern
+        sloth_id: relnusa-modern-latency
         sloth_service: relnusa-modern
-        sloth_slo: latensi
+        sloth_slo: latency
         team: relnusa
       record: slo:current_burn_rate:ratio
     - expr: |
-        slo:sli_error:ratio_rate30d{sloth_id="relnusa-modern-latensi", sloth_service="relnusa-modern", sloth_slo="latensi"}
+        slo:sli_error:ratio_rate30d{sloth_id="relnusa-modern-latency", sloth_service="relnusa-modern", sloth_slo="latency"}
         / on(sloth_id, sloth_slo, sloth_service) group_left
-        slo:error_budget:ratio{sloth_id="relnusa-modern-latensi", sloth_service="relnusa-modern", sloth_slo="latensi"}
+        slo:error_budget:ratio{sloth_id="relnusa-modern-latency", sloth_service="relnusa-modern", sloth_slo="latency"}
       labels:
-        arsitektur: modern
-        sloth_id: relnusa-modern-latensi
+        architecture: modern
+        sloth_id: relnusa-modern-latency
         sloth_service: relnusa-modern
-        sloth_slo: latensi
+        sloth_slo: latency
         team: relnusa
       record: slo:period_burn_rate:ratio
-    - expr: 1 - slo:period_burn_rate:ratio{sloth_id="relnusa-modern-latensi", sloth_service="relnusa-modern",
-        sloth_slo="latensi"}
+    - expr: 1 - slo:period_burn_rate:ratio{sloth_id="relnusa-modern-latency", sloth_service="relnusa-modern",
+        sloth_slo="latency"}
       labels:
-        arsitektur: modern
-        sloth_id: relnusa-modern-latensi
+        architecture: modern
+        sloth_id: relnusa-modern-latency
         sloth_service: relnusa-modern
-        sloth_slo: latensi
+        sloth_slo: latency
         team: relnusa
       record: slo:period_error_budget_remaining:ratio
     - expr: vector(1)
       labels:
-        arsitektur: modern
-        sloth_id: relnusa-modern-latensi
+        architecture: modern
+        sloth_id: relnusa-modern-latency
         sloth_mode: cli-gen-k8s
         sloth_objective: "99"
         sloth_service: relnusa-modern
-        sloth_slo: latensi
+        sloth_slo: latency
         sloth_spec: sloth.slok.dev/v1
         sloth_version: v0.16.0
         team: relnusa
       record: sloth_slo_info
-  - name: sloth-slo-alerts-relnusa-modern-latensi
+  - name: sloth-slo-alerts-relnusa-modern-latency
     rules:
-    - alert: RelnusaModernLatensi
+    - alert: RelnusaModernLatency
       annotations:
-        summary: Terlalu banyak permintaan lebih lambat dari 500 ms (target 99% di
-          bawah 500 ms).
-        title: Aplikasi modern melambat
+        summary: 'Too many requests are slower than 500 ms (target: 99% under 500
+          ms).'
+        title: Modern app is slowing down
       expr: |
         (
-            max(slo:sli_error:ratio_rate5m{sloth_id="relnusa-modern-latensi", sloth_service="relnusa-modern", sloth_slo="latensi"} > (14.4 * 0.01)) without (sloth_window)
+            max(slo:sli_error:ratio_rate5m{sloth_id="relnusa-modern-latency", sloth_service="relnusa-modern", sloth_slo="latency"} > (14.4 * 0.01)) without (sloth_window)
             and
-            max(slo:sli_error:ratio_rate1h{sloth_id="relnusa-modern-latensi", sloth_service="relnusa-modern", sloth_slo="latensi"} > (14.4 * 0.01)) without (sloth_window)
+            max(slo:sli_error:ratio_rate1h{sloth_id="relnusa-modern-latency", sloth_service="relnusa-modern", sloth_slo="latency"} > (14.4 * 0.01)) without (sloth_window)
         )
         or
         (
-            max(slo:sli_error:ratio_rate30m{sloth_id="relnusa-modern-latensi", sloth_service="relnusa-modern", sloth_slo="latensi"} > (6 * 0.01)) without (sloth_window)
+            max(slo:sli_error:ratio_rate30m{sloth_id="relnusa-modern-latency", sloth_service="relnusa-modern", sloth_slo="latency"} > (6 * 0.01)) without (sloth_window)
             and
-            max(slo:sli_error:ratio_rate6h{sloth_id="relnusa-modern-latensi", sloth_service="relnusa-modern", sloth_slo="latensi"} > (6 * 0.01)) without (sloth_window)
+            max(slo:sli_error:ratio_rate6h{sloth_id="relnusa-modern-latency", sloth_service="relnusa-modern", sloth_slo="latency"} > (6 * 0.01)) without (sloth_window)
         )
       labels:
         category: latency
         severity: page
         sloth_severity: page
-    - alert: RelnusaModernLatensi
+    - alert: RelnusaModernLatency
       annotations:
-        summary: Terlalu banyak permintaan lebih lambat dari 500 ms (target 99% di
-          bawah 500 ms).
-        title: Aplikasi modern melambat
+        summary: 'Too many requests are slower than 500 ms (target: 99% under 500
+          ms).'
+        title: Modern app is slowing down
       expr: |
         (
-            max(slo:sli_error:ratio_rate2h{sloth_id="relnusa-modern-latensi", sloth_service="relnusa-modern", sloth_slo="latensi"} > (3 * 0.01)) without (sloth_window)
+            max(slo:sli_error:ratio_rate2h{sloth_id="relnusa-modern-latency", sloth_service="relnusa-modern", sloth_slo="latency"} > (3 * 0.01)) without (sloth_window)
             and
-            max(slo:sli_error:ratio_rate1d{sloth_id="relnusa-modern-latensi", sloth_service="relnusa-modern", sloth_slo="latensi"} > (3 * 0.01)) without (sloth_window)
+            max(slo:sli_error:ratio_rate1d{sloth_id="relnusa-modern-latency", sloth_service="relnusa-modern", sloth_slo="latency"} > (3 * 0.01)) without (sloth_window)
         )
         or
         (
-            max(slo:sli_error:ratio_rate6h{sloth_id="relnusa-modern-latensi", sloth_service="relnusa-modern", sloth_slo="latensi"} > (1 * 0.01)) without (sloth_window)
+            max(slo:sli_error:ratio_rate6h{sloth_id="relnusa-modern-latency", sloth_service="relnusa-modern", sloth_slo="latency"} > (1 * 0.01)) without (sloth_window)
             and
-            max(slo:sli_error:ratio_rate3d{sloth_id="relnusa-modern-latensi", sloth_service="relnusa-modern", sloth_slo="latensi"} > (1 * 0.01)) without (sloth_window)
+            max(slo:sli_error:ratio_rate3d{sloth_id="relnusa-modern-latency", sloth_service="relnusa-modern", sloth_slo="latency"} > (1 * 0.01)) without (sloth_window)
         )
       labels:
         category: latency
         severity: ticket
         sloth_severity: ticket
-  - name: sloth-slo-sli-recordings-relnusa-modern-penerbitan-tiket
+  - name: sloth-slo-sli-recordings-relnusa-modern-ticket-issuance
     rules:
     - expr: |
         (sum(rate(payment_attempts_total{namespace="modern",outcome!="success"}[5m])))
         /
         (sum(rate(payment_attempts_total{namespace="modern"}[5m])))
       labels:
-        arsitektur: modern
-        sloth_id: relnusa-modern-penerbitan-tiket
+        architecture: modern
+        sloth_id: relnusa-modern-ticket-issuance
         sloth_service: relnusa-modern
-        sloth_slo: penerbitan-tiket
+        sloth_slo: ticket-issuance
         sloth_window: 5m
         team: relnusa
       record: slo:sli_error:ratio_rate5m
@@ -493,10 +493,10 @@ spec:
         /
         (sum(rate(payment_attempts_total{namespace="modern"}[30m])))
       labels:
-        arsitektur: modern
-        sloth_id: relnusa-modern-penerbitan-tiket
+        architecture: modern
+        sloth_id: relnusa-modern-ticket-issuance
         sloth_service: relnusa-modern
-        sloth_slo: penerbitan-tiket
+        sloth_slo: ticket-issuance
         sloth_window: 30m
         team: relnusa
       record: slo:sli_error:ratio_rate30m
@@ -505,10 +505,10 @@ spec:
         /
         (sum(rate(payment_attempts_total{namespace="modern"}[1h])))
       labels:
-        arsitektur: modern
-        sloth_id: relnusa-modern-penerbitan-tiket
+        architecture: modern
+        sloth_id: relnusa-modern-ticket-issuance
         sloth_service: relnusa-modern
-        sloth_slo: penerbitan-tiket
+        sloth_slo: ticket-issuance
         sloth_window: 1h
         team: relnusa
       record: slo:sli_error:ratio_rate1h
@@ -517,10 +517,10 @@ spec:
         /
         (sum(rate(payment_attempts_total{namespace="modern"}[2h])))
       labels:
-        arsitektur: modern
-        sloth_id: relnusa-modern-penerbitan-tiket
+        architecture: modern
+        sloth_id: relnusa-modern-ticket-issuance
         sloth_service: relnusa-modern
-        sloth_slo: penerbitan-tiket
+        sloth_slo: ticket-issuance
         sloth_window: 2h
         team: relnusa
       record: slo:sli_error:ratio_rate2h
@@ -529,10 +529,10 @@ spec:
         /
         (sum(rate(payment_attempts_total{namespace="modern"}[6h])))
       labels:
-        arsitektur: modern
-        sloth_id: relnusa-modern-penerbitan-tiket
+        architecture: modern
+        sloth_id: relnusa-modern-ticket-issuance
         sloth_service: relnusa-modern
-        sloth_slo: penerbitan-tiket
+        sloth_slo: ticket-issuance
         sloth_window: 6h
         team: relnusa
       record: slo:sli_error:ratio_rate6h
@@ -541,10 +541,10 @@ spec:
         /
         (sum(rate(payment_attempts_total{namespace="modern"}[1d])))
       labels:
-        arsitektur: modern
-        sloth_id: relnusa-modern-penerbitan-tiket
+        architecture: modern
+        sloth_id: relnusa-modern-ticket-issuance
         sloth_service: relnusa-modern
-        sloth_slo: penerbitan-tiket
+        sloth_slo: ticket-issuance
         sloth_window: 1d
         team: relnusa
       record: slo:sli_error:ratio_rate1d
@@ -553,137 +553,137 @@ spec:
         /
         (sum(rate(payment_attempts_total{namespace="modern"}[3d])))
       labels:
-        arsitektur: modern
-        sloth_id: relnusa-modern-penerbitan-tiket
+        architecture: modern
+        sloth_id: relnusa-modern-ticket-issuance
         sloth_service: relnusa-modern
-        sloth_slo: penerbitan-tiket
+        sloth_slo: ticket-issuance
         sloth_window: 3d
         team: relnusa
       record: slo:sli_error:ratio_rate3d
     - expr: |
-        sum_over_time(slo:sli_error:ratio_rate5m{sloth_id="relnusa-modern-penerbitan-tiket", sloth_service="relnusa-modern", sloth_slo="penerbitan-tiket"}[30d])
+        sum_over_time(slo:sli_error:ratio_rate5m{sloth_id="relnusa-modern-ticket-issuance", sloth_service="relnusa-modern", sloth_slo="ticket-issuance"}[30d])
         / ignoring (sloth_window)
-        count_over_time(slo:sli_error:ratio_rate5m{sloth_id="relnusa-modern-penerbitan-tiket", sloth_service="relnusa-modern", sloth_slo="penerbitan-tiket"}[30d])
+        count_over_time(slo:sli_error:ratio_rate5m{sloth_id="relnusa-modern-ticket-issuance", sloth_service="relnusa-modern", sloth_slo="ticket-issuance"}[30d])
       labels:
-        arsitektur: modern
-        sloth_id: relnusa-modern-penerbitan-tiket
+        architecture: modern
+        sloth_id: relnusa-modern-ticket-issuance
         sloth_service: relnusa-modern
-        sloth_slo: penerbitan-tiket
+        sloth_slo: ticket-issuance
         sloth_window: 30d
         team: relnusa
       record: slo:sli_error:ratio_rate30d
-  - name: sloth-slo-meta-recordings-relnusa-modern-penerbitan-tiket
+  - name: sloth-slo-meta-recordings-relnusa-modern-ticket-issuance
     rules:
     - expr: vector(0.9990000000000001)
       labels:
-        arsitektur: modern
-        sloth_id: relnusa-modern-penerbitan-tiket
+        architecture: modern
+        sloth_id: relnusa-modern-ticket-issuance
         sloth_service: relnusa-modern
-        sloth_slo: penerbitan-tiket
+        sloth_slo: ticket-issuance
         team: relnusa
       record: slo:objective:ratio
     - expr: vector(1-0.9990000000000001)
       labels:
-        arsitektur: modern
-        sloth_id: relnusa-modern-penerbitan-tiket
+        architecture: modern
+        sloth_id: relnusa-modern-ticket-issuance
         sloth_service: relnusa-modern
-        sloth_slo: penerbitan-tiket
+        sloth_slo: ticket-issuance
         team: relnusa
       record: slo:error_budget:ratio
     - expr: vector(30)
       labels:
-        arsitektur: modern
-        sloth_id: relnusa-modern-penerbitan-tiket
+        architecture: modern
+        sloth_id: relnusa-modern-ticket-issuance
         sloth_service: relnusa-modern
-        sloth_slo: penerbitan-tiket
+        sloth_slo: ticket-issuance
         team: relnusa
       record: slo:time_period:days
     - expr: |
-        slo:sli_error:ratio_rate5m{sloth_id="relnusa-modern-penerbitan-tiket", sloth_service="relnusa-modern", sloth_slo="penerbitan-tiket"}
+        slo:sli_error:ratio_rate5m{sloth_id="relnusa-modern-ticket-issuance", sloth_service="relnusa-modern", sloth_slo="ticket-issuance"}
         / on(sloth_id, sloth_slo, sloth_service) group_left
-        slo:error_budget:ratio{sloth_id="relnusa-modern-penerbitan-tiket", sloth_service="relnusa-modern", sloth_slo="penerbitan-tiket"}
+        slo:error_budget:ratio{sloth_id="relnusa-modern-ticket-issuance", sloth_service="relnusa-modern", sloth_slo="ticket-issuance"}
       labels:
-        arsitektur: modern
-        sloth_id: relnusa-modern-penerbitan-tiket
+        architecture: modern
+        sloth_id: relnusa-modern-ticket-issuance
         sloth_service: relnusa-modern
-        sloth_slo: penerbitan-tiket
+        sloth_slo: ticket-issuance
         team: relnusa
       record: slo:current_burn_rate:ratio
     - expr: |
-        slo:sli_error:ratio_rate30d{sloth_id="relnusa-modern-penerbitan-tiket", sloth_service="relnusa-modern", sloth_slo="penerbitan-tiket"}
+        slo:sli_error:ratio_rate30d{sloth_id="relnusa-modern-ticket-issuance", sloth_service="relnusa-modern", sloth_slo="ticket-issuance"}
         / on(sloth_id, sloth_slo, sloth_service) group_left
-        slo:error_budget:ratio{sloth_id="relnusa-modern-penerbitan-tiket", sloth_service="relnusa-modern", sloth_slo="penerbitan-tiket"}
+        slo:error_budget:ratio{sloth_id="relnusa-modern-ticket-issuance", sloth_service="relnusa-modern", sloth_slo="ticket-issuance"}
       labels:
-        arsitektur: modern
-        sloth_id: relnusa-modern-penerbitan-tiket
+        architecture: modern
+        sloth_id: relnusa-modern-ticket-issuance
         sloth_service: relnusa-modern
-        sloth_slo: penerbitan-tiket
+        sloth_slo: ticket-issuance
         team: relnusa
       record: slo:period_burn_rate:ratio
-    - expr: 1 - slo:period_burn_rate:ratio{sloth_id="relnusa-modern-penerbitan-tiket",
-        sloth_service="relnusa-modern", sloth_slo="penerbitan-tiket"}
+    - expr: 1 - slo:period_burn_rate:ratio{sloth_id="relnusa-modern-ticket-issuance",
+        sloth_service="relnusa-modern", sloth_slo="ticket-issuance"}
       labels:
-        arsitektur: modern
-        sloth_id: relnusa-modern-penerbitan-tiket
+        architecture: modern
+        sloth_id: relnusa-modern-ticket-issuance
         sloth_service: relnusa-modern
-        sloth_slo: penerbitan-tiket
+        sloth_slo: ticket-issuance
         team: relnusa
       record: slo:period_error_budget_remaining:ratio
     - expr: vector(1)
       labels:
-        arsitektur: modern
-        sloth_id: relnusa-modern-penerbitan-tiket
+        architecture: modern
+        sloth_id: relnusa-modern-ticket-issuance
         sloth_mode: cli-gen-k8s
         sloth_objective: "99.9"
         sloth_service: relnusa-modern
-        sloth_slo: penerbitan-tiket
+        sloth_slo: ticket-issuance
         sloth_spec: sloth.slok.dev/v1
         sloth_version: v0.16.0
         team: relnusa
       record: sloth_slo_info
-  - name: sloth-slo-alerts-relnusa-modern-penerbitan-tiket
+  - name: sloth-slo-alerts-relnusa-modern-ticket-issuance
     rules:
-    - alert: RelnusaModernPenerbitanTiket
+    - alert: RelnusaModernTicketIssuance
       annotations:
-        runbook: Cek status bank dan circuit breaker di dasbor RelNusa 3 · Di dalam
-          arsitektur modern.
-        summary: Pembayaran ke bank gagal atau tertunda; penumpang belum menerima
-          e-tiket meski situs tetap cepat.
-        title: E-tiket gagal terbit
+        runbook: 'Check the bank and the circuit breaker on Grafana RelNusa 3 (Inside
+          the modern architecture). Runbook: templates/alert-runbook.md'
+        summary: Payments to the bank are failing or delayed; passengers are not receiving
+          e-tickets even though the site is still fast.
+        title: E-tickets are not being issued
       expr: |
         (
-            max(slo:sli_error:ratio_rate5m{sloth_id="relnusa-modern-penerbitan-tiket", sloth_service="relnusa-modern", sloth_slo="penerbitan-tiket"} > (14.4 * 0.0009999999999999432)) without (sloth_window)
+            max(slo:sli_error:ratio_rate5m{sloth_id="relnusa-modern-ticket-issuance", sloth_service="relnusa-modern", sloth_slo="ticket-issuance"} > (14.4 * 0.0009999999999999432)) without (sloth_window)
             and
-            max(slo:sli_error:ratio_rate1h{sloth_id="relnusa-modern-penerbitan-tiket", sloth_service="relnusa-modern", sloth_slo="penerbitan-tiket"} > (14.4 * 0.0009999999999999432)) without (sloth_window)
+            max(slo:sli_error:ratio_rate1h{sloth_id="relnusa-modern-ticket-issuance", sloth_service="relnusa-modern", sloth_slo="ticket-issuance"} > (14.4 * 0.0009999999999999432)) without (sloth_window)
         )
         or
         (
-            max(slo:sli_error:ratio_rate30m{sloth_id="relnusa-modern-penerbitan-tiket", sloth_service="relnusa-modern", sloth_slo="penerbitan-tiket"} > (6 * 0.0009999999999999432)) without (sloth_window)
+            max(slo:sli_error:ratio_rate30m{sloth_id="relnusa-modern-ticket-issuance", sloth_service="relnusa-modern", sloth_slo="ticket-issuance"} > (6 * 0.0009999999999999432)) without (sloth_window)
             and
-            max(slo:sli_error:ratio_rate6h{sloth_id="relnusa-modern-penerbitan-tiket", sloth_service="relnusa-modern", sloth_slo="penerbitan-tiket"} > (6 * 0.0009999999999999432)) without (sloth_window)
+            max(slo:sli_error:ratio_rate6h{sloth_id="relnusa-modern-ticket-issuance", sloth_service="relnusa-modern", sloth_slo="ticket-issuance"} > (6 * 0.0009999999999999432)) without (sloth_window)
         )
       labels:
         category: journey
         severity: page
         sloth_severity: page
-    - alert: RelnusaModernPenerbitanTiket
+    - alert: RelnusaModernTicketIssuance
       annotations:
-        runbook: Cek status bank dan circuit breaker di dasbor RelNusa 3 · Di dalam
-          arsitektur modern.
-        summary: Pembayaran ke bank gagal atau tertunda; penumpang belum menerima
-          e-tiket meski situs tetap cepat.
-        title: E-tiket gagal terbit
+        runbook: 'Check the bank and the circuit breaker on Grafana RelNusa 3 (Inside
+          the modern architecture). Runbook: templates/alert-runbook.md'
+        summary: Payments to the bank are failing or delayed; passengers are not receiving
+          e-tickets even though the site is still fast.
+        title: E-tickets are not being issued
       expr: |
         (
-            max(slo:sli_error:ratio_rate2h{sloth_id="relnusa-modern-penerbitan-tiket", sloth_service="relnusa-modern", sloth_slo="penerbitan-tiket"} > (3 * 0.0009999999999999432)) without (sloth_window)
+            max(slo:sli_error:ratio_rate2h{sloth_id="relnusa-modern-ticket-issuance", sloth_service="relnusa-modern", sloth_slo="ticket-issuance"} > (3 * 0.0009999999999999432)) without (sloth_window)
             and
-            max(slo:sli_error:ratio_rate1d{sloth_id="relnusa-modern-penerbitan-tiket", sloth_service="relnusa-modern", sloth_slo="penerbitan-tiket"} > (3 * 0.0009999999999999432)) without (sloth_window)
+            max(slo:sli_error:ratio_rate1d{sloth_id="relnusa-modern-ticket-issuance", sloth_service="relnusa-modern", sloth_slo="ticket-issuance"} > (3 * 0.0009999999999999432)) without (sloth_window)
         )
         or
         (
-            max(slo:sli_error:ratio_rate6h{sloth_id="relnusa-modern-penerbitan-tiket", sloth_service="relnusa-modern", sloth_slo="penerbitan-tiket"} > (1 * 0.0009999999999999432)) without (sloth_window)
+            max(slo:sli_error:ratio_rate6h{sloth_id="relnusa-modern-ticket-issuance", sloth_service="relnusa-modern", sloth_slo="ticket-issuance"} > (1 * 0.0009999999999999432)) without (sloth_window)
             and
-            max(slo:sli_error:ratio_rate3d{sloth_id="relnusa-modern-penerbitan-tiket", sloth_service="relnusa-modern", sloth_slo="penerbitan-tiket"} > (1 * 0.0009999999999999432)) without (sloth_window)
+            max(slo:sli_error:ratio_rate3d{sloth_id="relnusa-modern-ticket-issuance", sloth_service="relnusa-modern", sloth_slo="ticket-issuance"} > (1 * 0.0009999999999999432)) without (sloth_window)
         )
       labels:
         category: journey
@@ -704,17 +704,17 @@ metadata:
   namespace: observability
 spec:
   groups:
-  - name: sloth-slo-sli-recordings-relnusa-legacy-ketersediaan
+  - name: sloth-slo-sli-recordings-relnusa-legacy-availability
     rules:
     - expr: |
         ((sum(rate(traefik_router_requests_total{router=~"legacy-legacy-.*",code=~"5.."}[5m])) or vector(0)))
         /
         (sum(rate(traefik_router_requests_total{router=~"legacy-legacy-.*"}[5m])))
       labels:
-        arsitektur: legacy
-        sloth_id: relnusa-legacy-ketersediaan
+        architecture: legacy
+        sloth_id: relnusa-legacy-availability
         sloth_service: relnusa-legacy
-        sloth_slo: ketersediaan
+        sloth_slo: availability
         sloth_window: 5m
         team: relnusa
       record: slo:sli_error:ratio_rate5m
@@ -723,10 +723,10 @@ spec:
         /
         (sum(rate(traefik_router_requests_total{router=~"legacy-legacy-.*"}[30m])))
       labels:
-        arsitektur: legacy
-        sloth_id: relnusa-legacy-ketersediaan
+        architecture: legacy
+        sloth_id: relnusa-legacy-availability
         sloth_service: relnusa-legacy
-        sloth_slo: ketersediaan
+        sloth_slo: availability
         sloth_window: 30m
         team: relnusa
       record: slo:sli_error:ratio_rate30m
@@ -735,10 +735,10 @@ spec:
         /
         (sum(rate(traefik_router_requests_total{router=~"legacy-legacy-.*"}[1h])))
       labels:
-        arsitektur: legacy
-        sloth_id: relnusa-legacy-ketersediaan
+        architecture: legacy
+        sloth_id: relnusa-legacy-availability
         sloth_service: relnusa-legacy
-        sloth_slo: ketersediaan
+        sloth_slo: availability
         sloth_window: 1h
         team: relnusa
       record: slo:sli_error:ratio_rate1h
@@ -747,10 +747,10 @@ spec:
         /
         (sum(rate(traefik_router_requests_total{router=~"legacy-legacy-.*"}[2h])))
       labels:
-        arsitektur: legacy
-        sloth_id: relnusa-legacy-ketersediaan
+        architecture: legacy
+        sloth_id: relnusa-legacy-availability
         sloth_service: relnusa-legacy
-        sloth_slo: ketersediaan
+        sloth_slo: availability
         sloth_window: 2h
         team: relnusa
       record: slo:sli_error:ratio_rate2h
@@ -759,10 +759,10 @@ spec:
         /
         (sum(rate(traefik_router_requests_total{router=~"legacy-legacy-.*"}[6h])))
       labels:
-        arsitektur: legacy
-        sloth_id: relnusa-legacy-ketersediaan
+        architecture: legacy
+        sloth_id: relnusa-legacy-availability
         sloth_service: relnusa-legacy
-        sloth_slo: ketersediaan
+        sloth_slo: availability
         sloth_window: 6h
         team: relnusa
       record: slo:sli_error:ratio_rate6h
@@ -771,10 +771,10 @@ spec:
         /
         (sum(rate(traefik_router_requests_total{router=~"legacy-legacy-.*"}[1d])))
       labels:
-        arsitektur: legacy
-        sloth_id: relnusa-legacy-ketersediaan
+        architecture: legacy
+        sloth_id: relnusa-legacy-availability
         sloth_service: relnusa-legacy
-        sloth_slo: ketersediaan
+        sloth_slo: availability
         sloth_window: 1d
         team: relnusa
       record: slo:sli_error:ratio_rate1d
@@ -783,139 +783,139 @@ spec:
         /
         (sum(rate(traefik_router_requests_total{router=~"legacy-legacy-.*"}[3d])))
       labels:
-        arsitektur: legacy
-        sloth_id: relnusa-legacy-ketersediaan
+        architecture: legacy
+        sloth_id: relnusa-legacy-availability
         sloth_service: relnusa-legacy
-        sloth_slo: ketersediaan
+        sloth_slo: availability
         sloth_window: 3d
         team: relnusa
       record: slo:sli_error:ratio_rate3d
     - expr: |
-        sum_over_time(slo:sli_error:ratio_rate5m{sloth_id="relnusa-legacy-ketersediaan", sloth_service="relnusa-legacy", sloth_slo="ketersediaan"}[30d])
+        sum_over_time(slo:sli_error:ratio_rate5m{sloth_id="relnusa-legacy-availability", sloth_service="relnusa-legacy", sloth_slo="availability"}[30d])
         / ignoring (sloth_window)
-        count_over_time(slo:sli_error:ratio_rate5m{sloth_id="relnusa-legacy-ketersediaan", sloth_service="relnusa-legacy", sloth_slo="ketersediaan"}[30d])
+        count_over_time(slo:sli_error:ratio_rate5m{sloth_id="relnusa-legacy-availability", sloth_service="relnusa-legacy", sloth_slo="availability"}[30d])
       labels:
-        arsitektur: legacy
-        sloth_id: relnusa-legacy-ketersediaan
+        architecture: legacy
+        sloth_id: relnusa-legacy-availability
         sloth_service: relnusa-legacy
-        sloth_slo: ketersediaan
+        sloth_slo: availability
         sloth_window: 30d
         team: relnusa
       record: slo:sli_error:ratio_rate30d
-  - name: sloth-slo-meta-recordings-relnusa-legacy-ketersediaan
+  - name: sloth-slo-meta-recordings-relnusa-legacy-availability
     rules:
     - expr: vector(0.9990000000000001)
       labels:
-        arsitektur: legacy
-        sloth_id: relnusa-legacy-ketersediaan
+        architecture: legacy
+        sloth_id: relnusa-legacy-availability
         sloth_service: relnusa-legacy
-        sloth_slo: ketersediaan
+        sloth_slo: availability
         team: relnusa
       record: slo:objective:ratio
     - expr: vector(1-0.9990000000000001)
       labels:
-        arsitektur: legacy
-        sloth_id: relnusa-legacy-ketersediaan
+        architecture: legacy
+        sloth_id: relnusa-legacy-availability
         sloth_service: relnusa-legacy
-        sloth_slo: ketersediaan
+        sloth_slo: availability
         team: relnusa
       record: slo:error_budget:ratio
     - expr: vector(30)
       labels:
-        arsitektur: legacy
-        sloth_id: relnusa-legacy-ketersediaan
+        architecture: legacy
+        sloth_id: relnusa-legacy-availability
         sloth_service: relnusa-legacy
-        sloth_slo: ketersediaan
+        sloth_slo: availability
         team: relnusa
       record: slo:time_period:days
     - expr: |
-        slo:sli_error:ratio_rate5m{sloth_id="relnusa-legacy-ketersediaan", sloth_service="relnusa-legacy", sloth_slo="ketersediaan"}
+        slo:sli_error:ratio_rate5m{sloth_id="relnusa-legacy-availability", sloth_service="relnusa-legacy", sloth_slo="availability"}
         / on(sloth_id, sloth_slo, sloth_service) group_left
-        slo:error_budget:ratio{sloth_id="relnusa-legacy-ketersediaan", sloth_service="relnusa-legacy", sloth_slo="ketersediaan"}
+        slo:error_budget:ratio{sloth_id="relnusa-legacy-availability", sloth_service="relnusa-legacy", sloth_slo="availability"}
       labels:
-        arsitektur: legacy
-        sloth_id: relnusa-legacy-ketersediaan
+        architecture: legacy
+        sloth_id: relnusa-legacy-availability
         sloth_service: relnusa-legacy
-        sloth_slo: ketersediaan
+        sloth_slo: availability
         team: relnusa
       record: slo:current_burn_rate:ratio
     - expr: |
-        slo:sli_error:ratio_rate30d{sloth_id="relnusa-legacy-ketersediaan", sloth_service="relnusa-legacy", sloth_slo="ketersediaan"}
+        slo:sli_error:ratio_rate30d{sloth_id="relnusa-legacy-availability", sloth_service="relnusa-legacy", sloth_slo="availability"}
         / on(sloth_id, sloth_slo, sloth_service) group_left
-        slo:error_budget:ratio{sloth_id="relnusa-legacy-ketersediaan", sloth_service="relnusa-legacy", sloth_slo="ketersediaan"}
+        slo:error_budget:ratio{sloth_id="relnusa-legacy-availability", sloth_service="relnusa-legacy", sloth_slo="availability"}
       labels:
-        arsitektur: legacy
-        sloth_id: relnusa-legacy-ketersediaan
+        architecture: legacy
+        sloth_id: relnusa-legacy-availability
         sloth_service: relnusa-legacy
-        sloth_slo: ketersediaan
+        sloth_slo: availability
         team: relnusa
       record: slo:period_burn_rate:ratio
-    - expr: 1 - slo:period_burn_rate:ratio{sloth_id="relnusa-legacy-ketersediaan",
-        sloth_service="relnusa-legacy", sloth_slo="ketersediaan"}
+    - expr: 1 - slo:period_burn_rate:ratio{sloth_id="relnusa-legacy-availability",
+        sloth_service="relnusa-legacy", sloth_slo="availability"}
       labels:
-        arsitektur: legacy
-        sloth_id: relnusa-legacy-ketersediaan
+        architecture: legacy
+        sloth_id: relnusa-legacy-availability
         sloth_service: relnusa-legacy
-        sloth_slo: ketersediaan
+        sloth_slo: availability
         team: relnusa
       record: slo:period_error_budget_remaining:ratio
     - expr: vector(1)
       labels:
-        arsitektur: legacy
-        sloth_id: relnusa-legacy-ketersediaan
+        architecture: legacy
+        sloth_id: relnusa-legacy-availability
         sloth_mode: cli-gen-k8s
         sloth_objective: "99.9"
         sloth_service: relnusa-legacy
-        sloth_slo: ketersediaan
+        sloth_slo: availability
         sloth_spec: sloth.slok.dev/v1
         sloth_version: v0.16.0
         team: relnusa
       record: sloth_slo_info
-  - name: sloth-slo-alerts-relnusa-legacy-ketersediaan
+  - name: sloth-slo-alerts-relnusa-legacy-availability
     rules:
-    - alert: RelnusaLegacyKetersediaan
+    - alert: RelnusaLegacyAvailability
       annotations:
-        summary: Error budget ketersediaan aplikasi lama (target 99,9%) terpakai jauh
-          lebih cepat dari normal.
-        title: Ketersediaan aplikasi lama turun
+        summary: The legacy app's availability error budget (target 99.9%) is being
+          used much faster than normal.
+        title: Legacy app availability is dropping
       expr: |
         (
-            max(slo:sli_error:ratio_rate5m{sloth_id="relnusa-legacy-ketersediaan", sloth_service="relnusa-legacy", sloth_slo="ketersediaan"} > (14.4 * 0.0009999999999999432)) without (sloth_window)
+            max(slo:sli_error:ratio_rate5m{sloth_id="relnusa-legacy-availability", sloth_service="relnusa-legacy", sloth_slo="availability"} > (14.4 * 0.0009999999999999432)) without (sloth_window)
             and
-            max(slo:sli_error:ratio_rate1h{sloth_id="relnusa-legacy-ketersediaan", sloth_service="relnusa-legacy", sloth_slo="ketersediaan"} > (14.4 * 0.0009999999999999432)) without (sloth_window)
+            max(slo:sli_error:ratio_rate1h{sloth_id="relnusa-legacy-availability", sloth_service="relnusa-legacy", sloth_slo="availability"} > (14.4 * 0.0009999999999999432)) without (sloth_window)
         )
         or
         (
-            max(slo:sli_error:ratio_rate30m{sloth_id="relnusa-legacy-ketersediaan", sloth_service="relnusa-legacy", sloth_slo="ketersediaan"} > (6 * 0.0009999999999999432)) without (sloth_window)
+            max(slo:sli_error:ratio_rate30m{sloth_id="relnusa-legacy-availability", sloth_service="relnusa-legacy", sloth_slo="availability"} > (6 * 0.0009999999999999432)) without (sloth_window)
             and
-            max(slo:sli_error:ratio_rate6h{sloth_id="relnusa-legacy-ketersediaan", sloth_service="relnusa-legacy", sloth_slo="ketersediaan"} > (6 * 0.0009999999999999432)) without (sloth_window)
+            max(slo:sli_error:ratio_rate6h{sloth_id="relnusa-legacy-availability", sloth_service="relnusa-legacy", sloth_slo="availability"} > (6 * 0.0009999999999999432)) without (sloth_window)
         )
       labels:
         category: availability
         severity: page
         sloth_severity: page
-    - alert: RelnusaLegacyKetersediaan
+    - alert: RelnusaLegacyAvailability
       annotations:
-        summary: Error budget ketersediaan aplikasi lama (target 99,9%) terpakai jauh
-          lebih cepat dari normal.
-        title: Ketersediaan aplikasi lama turun
+        summary: The legacy app's availability error budget (target 99.9%) is being
+          used much faster than normal.
+        title: Legacy app availability is dropping
       expr: |
         (
-            max(slo:sli_error:ratio_rate2h{sloth_id="relnusa-legacy-ketersediaan", sloth_service="relnusa-legacy", sloth_slo="ketersediaan"} > (3 * 0.0009999999999999432)) without (sloth_window)
+            max(slo:sli_error:ratio_rate2h{sloth_id="relnusa-legacy-availability", sloth_service="relnusa-legacy", sloth_slo="availability"} > (3 * 0.0009999999999999432)) without (sloth_window)
             and
-            max(slo:sli_error:ratio_rate1d{sloth_id="relnusa-legacy-ketersediaan", sloth_service="relnusa-legacy", sloth_slo="ketersediaan"} > (3 * 0.0009999999999999432)) without (sloth_window)
+            max(slo:sli_error:ratio_rate1d{sloth_id="relnusa-legacy-availability", sloth_service="relnusa-legacy", sloth_slo="availability"} > (3 * 0.0009999999999999432)) without (sloth_window)
         )
         or
         (
-            max(slo:sli_error:ratio_rate6h{sloth_id="relnusa-legacy-ketersediaan", sloth_service="relnusa-legacy", sloth_slo="ketersediaan"} > (1 * 0.0009999999999999432)) without (sloth_window)
+            max(slo:sli_error:ratio_rate6h{sloth_id="relnusa-legacy-availability", sloth_service="relnusa-legacy", sloth_slo="availability"} > (1 * 0.0009999999999999432)) without (sloth_window)
             and
-            max(slo:sli_error:ratio_rate3d{sloth_id="relnusa-legacy-ketersediaan", sloth_service="relnusa-legacy", sloth_slo="ketersediaan"} > (1 * 0.0009999999999999432)) without (sloth_window)
+            max(slo:sli_error:ratio_rate3d{sloth_id="relnusa-legacy-availability", sloth_service="relnusa-legacy", sloth_slo="availability"} > (1 * 0.0009999999999999432)) without (sloth_window)
         )
       labels:
         category: availability
         severity: ticket
         sloth_severity: ticket
-  - name: sloth-slo-sli-recordings-relnusa-legacy-latensi
+  - name: sloth-slo-sli-recordings-relnusa-legacy-latency
     rules:
     - expr: |
         ((
@@ -927,10 +927,10 @@ spec:
         /
         (sum(rate(traefik_router_request_duration_seconds_count{router=~"legacy-legacy-.*"}[5m])))
       labels:
-        arsitektur: legacy
-        sloth_id: relnusa-legacy-latensi
+        architecture: legacy
+        sloth_id: relnusa-legacy-latency
         sloth_service: relnusa-legacy
-        sloth_slo: latensi
+        sloth_slo: latency
         sloth_window: 5m
         team: relnusa
       record: slo:sli_error:ratio_rate5m
@@ -944,10 +944,10 @@ spec:
         /
         (sum(rate(traefik_router_request_duration_seconds_count{router=~"legacy-legacy-.*"}[30m])))
       labels:
-        arsitektur: legacy
-        sloth_id: relnusa-legacy-latensi
+        architecture: legacy
+        sloth_id: relnusa-legacy-latency
         sloth_service: relnusa-legacy
-        sloth_slo: latensi
+        sloth_slo: latency
         sloth_window: 30m
         team: relnusa
       record: slo:sli_error:ratio_rate30m
@@ -961,10 +961,10 @@ spec:
         /
         (sum(rate(traefik_router_request_duration_seconds_count{router=~"legacy-legacy-.*"}[1h])))
       labels:
-        arsitektur: legacy
-        sloth_id: relnusa-legacy-latensi
+        architecture: legacy
+        sloth_id: relnusa-legacy-latency
         sloth_service: relnusa-legacy
-        sloth_slo: latensi
+        sloth_slo: latency
         sloth_window: 1h
         team: relnusa
       record: slo:sli_error:ratio_rate1h
@@ -978,10 +978,10 @@ spec:
         /
         (sum(rate(traefik_router_request_duration_seconds_count{router=~"legacy-legacy-.*"}[2h])))
       labels:
-        arsitektur: legacy
-        sloth_id: relnusa-legacy-latensi
+        architecture: legacy
+        sloth_id: relnusa-legacy-latency
         sloth_service: relnusa-legacy
-        sloth_slo: latensi
+        sloth_slo: latency
         sloth_window: 2h
         team: relnusa
       record: slo:sli_error:ratio_rate2h
@@ -995,10 +995,10 @@ spec:
         /
         (sum(rate(traefik_router_request_duration_seconds_count{router=~"legacy-legacy-.*"}[6h])))
       labels:
-        arsitektur: legacy
-        sloth_id: relnusa-legacy-latensi
+        architecture: legacy
+        sloth_id: relnusa-legacy-latency
         sloth_service: relnusa-legacy
-        sloth_slo: latensi
+        sloth_slo: latency
         sloth_window: 6h
         team: relnusa
       record: slo:sli_error:ratio_rate6h
@@ -1012,10 +1012,10 @@ spec:
         /
         (sum(rate(traefik_router_request_duration_seconds_count{router=~"legacy-legacy-.*"}[1d])))
       labels:
-        arsitektur: legacy
-        sloth_id: relnusa-legacy-latensi
+        architecture: legacy
+        sloth_id: relnusa-legacy-latency
         sloth_service: relnusa-legacy
-        sloth_slo: latensi
+        sloth_slo: latency
         sloth_window: 1d
         team: relnusa
       record: slo:sli_error:ratio_rate1d
@@ -1029,133 +1029,133 @@ spec:
         /
         (sum(rate(traefik_router_request_duration_seconds_count{router=~"legacy-legacy-.*"}[3d])))
       labels:
-        arsitektur: legacy
-        sloth_id: relnusa-legacy-latensi
+        architecture: legacy
+        sloth_id: relnusa-legacy-latency
         sloth_service: relnusa-legacy
-        sloth_slo: latensi
+        sloth_slo: latency
         sloth_window: 3d
         team: relnusa
       record: slo:sli_error:ratio_rate3d
     - expr: |
-        sum_over_time(slo:sli_error:ratio_rate5m{sloth_id="relnusa-legacy-latensi", sloth_service="relnusa-legacy", sloth_slo="latensi"}[30d])
+        sum_over_time(slo:sli_error:ratio_rate5m{sloth_id="relnusa-legacy-latency", sloth_service="relnusa-legacy", sloth_slo="latency"}[30d])
         / ignoring (sloth_window)
-        count_over_time(slo:sli_error:ratio_rate5m{sloth_id="relnusa-legacy-latensi", sloth_service="relnusa-legacy", sloth_slo="latensi"}[30d])
+        count_over_time(slo:sli_error:ratio_rate5m{sloth_id="relnusa-legacy-latency", sloth_service="relnusa-legacy", sloth_slo="latency"}[30d])
       labels:
-        arsitektur: legacy
-        sloth_id: relnusa-legacy-latensi
+        architecture: legacy
+        sloth_id: relnusa-legacy-latency
         sloth_service: relnusa-legacy
-        sloth_slo: latensi
+        sloth_slo: latency
         sloth_window: 30d
         team: relnusa
       record: slo:sli_error:ratio_rate30d
-  - name: sloth-slo-meta-recordings-relnusa-legacy-latensi
+  - name: sloth-slo-meta-recordings-relnusa-legacy-latency
     rules:
     - expr: vector(0.99)
       labels:
-        arsitektur: legacy
-        sloth_id: relnusa-legacy-latensi
+        architecture: legacy
+        sloth_id: relnusa-legacy-latency
         sloth_service: relnusa-legacy
-        sloth_slo: latensi
+        sloth_slo: latency
         team: relnusa
       record: slo:objective:ratio
     - expr: vector(1-0.99)
       labels:
-        arsitektur: legacy
-        sloth_id: relnusa-legacy-latensi
+        architecture: legacy
+        sloth_id: relnusa-legacy-latency
         sloth_service: relnusa-legacy
-        sloth_slo: latensi
+        sloth_slo: latency
         team: relnusa
       record: slo:error_budget:ratio
     - expr: vector(30)
       labels:
-        arsitektur: legacy
-        sloth_id: relnusa-legacy-latensi
+        architecture: legacy
+        sloth_id: relnusa-legacy-latency
         sloth_service: relnusa-legacy
-        sloth_slo: latensi
+        sloth_slo: latency
         team: relnusa
       record: slo:time_period:days
     - expr: |
-        slo:sli_error:ratio_rate5m{sloth_id="relnusa-legacy-latensi", sloth_service="relnusa-legacy", sloth_slo="latensi"}
+        slo:sli_error:ratio_rate5m{sloth_id="relnusa-legacy-latency", sloth_service="relnusa-legacy", sloth_slo="latency"}
         / on(sloth_id, sloth_slo, sloth_service) group_left
-        slo:error_budget:ratio{sloth_id="relnusa-legacy-latensi", sloth_service="relnusa-legacy", sloth_slo="latensi"}
+        slo:error_budget:ratio{sloth_id="relnusa-legacy-latency", sloth_service="relnusa-legacy", sloth_slo="latency"}
       labels:
-        arsitektur: legacy
-        sloth_id: relnusa-legacy-latensi
+        architecture: legacy
+        sloth_id: relnusa-legacy-latency
         sloth_service: relnusa-legacy
-        sloth_slo: latensi
+        sloth_slo: latency
         team: relnusa
       record: slo:current_burn_rate:ratio
     - expr: |
-        slo:sli_error:ratio_rate30d{sloth_id="relnusa-legacy-latensi", sloth_service="relnusa-legacy", sloth_slo="latensi"}
+        slo:sli_error:ratio_rate30d{sloth_id="relnusa-legacy-latency", sloth_service="relnusa-legacy", sloth_slo="latency"}
         / on(sloth_id, sloth_slo, sloth_service) group_left
-        slo:error_budget:ratio{sloth_id="relnusa-legacy-latensi", sloth_service="relnusa-legacy", sloth_slo="latensi"}
+        slo:error_budget:ratio{sloth_id="relnusa-legacy-latency", sloth_service="relnusa-legacy", sloth_slo="latency"}
       labels:
-        arsitektur: legacy
-        sloth_id: relnusa-legacy-latensi
+        architecture: legacy
+        sloth_id: relnusa-legacy-latency
         sloth_service: relnusa-legacy
-        sloth_slo: latensi
+        sloth_slo: latency
         team: relnusa
       record: slo:period_burn_rate:ratio
-    - expr: 1 - slo:period_burn_rate:ratio{sloth_id="relnusa-legacy-latensi", sloth_service="relnusa-legacy",
-        sloth_slo="latensi"}
+    - expr: 1 - slo:period_burn_rate:ratio{sloth_id="relnusa-legacy-latency", sloth_service="relnusa-legacy",
+        sloth_slo="latency"}
       labels:
-        arsitektur: legacy
-        sloth_id: relnusa-legacy-latensi
+        architecture: legacy
+        sloth_id: relnusa-legacy-latency
         sloth_service: relnusa-legacy
-        sloth_slo: latensi
+        sloth_slo: latency
         team: relnusa
       record: slo:period_error_budget_remaining:ratio
     - expr: vector(1)
       labels:
-        arsitektur: legacy
-        sloth_id: relnusa-legacy-latensi
+        architecture: legacy
+        sloth_id: relnusa-legacy-latency
         sloth_mode: cli-gen-k8s
         sloth_objective: "99"
         sloth_service: relnusa-legacy
-        sloth_slo: latensi
+        sloth_slo: latency
         sloth_spec: sloth.slok.dev/v1
         sloth_version: v0.16.0
         team: relnusa
       record: sloth_slo_info
-  - name: sloth-slo-alerts-relnusa-legacy-latensi
+  - name: sloth-slo-alerts-relnusa-legacy-latency
     rules:
-    - alert: RelnusaLegacyLatensi
+    - alert: RelnusaLegacyLatency
       annotations:
-        summary: Terlalu banyak permintaan lebih lambat dari 500 ms (target 99% di
-          bawah 500 ms).
-        title: Aplikasi lama melambat
+        summary: 'Too many requests are slower than 500 ms (target: 99% under 500
+          ms).'
+        title: Legacy app is slowing down
       expr: |
         (
-            max(slo:sli_error:ratio_rate5m{sloth_id="relnusa-legacy-latensi", sloth_service="relnusa-legacy", sloth_slo="latensi"} > (14.4 * 0.01)) without (sloth_window)
+            max(slo:sli_error:ratio_rate5m{sloth_id="relnusa-legacy-latency", sloth_service="relnusa-legacy", sloth_slo="latency"} > (14.4 * 0.01)) without (sloth_window)
             and
-            max(slo:sli_error:ratio_rate1h{sloth_id="relnusa-legacy-latensi", sloth_service="relnusa-legacy", sloth_slo="latensi"} > (14.4 * 0.01)) without (sloth_window)
+            max(slo:sli_error:ratio_rate1h{sloth_id="relnusa-legacy-latency", sloth_service="relnusa-legacy", sloth_slo="latency"} > (14.4 * 0.01)) without (sloth_window)
         )
         or
         (
-            max(slo:sli_error:ratio_rate30m{sloth_id="relnusa-legacy-latensi", sloth_service="relnusa-legacy", sloth_slo="latensi"} > (6 * 0.01)) without (sloth_window)
+            max(slo:sli_error:ratio_rate30m{sloth_id="relnusa-legacy-latency", sloth_service="relnusa-legacy", sloth_slo="latency"} > (6 * 0.01)) without (sloth_window)
             and
-            max(slo:sli_error:ratio_rate6h{sloth_id="relnusa-legacy-latensi", sloth_service="relnusa-legacy", sloth_slo="latensi"} > (6 * 0.01)) without (sloth_window)
+            max(slo:sli_error:ratio_rate6h{sloth_id="relnusa-legacy-latency", sloth_service="relnusa-legacy", sloth_slo="latency"} > (6 * 0.01)) without (sloth_window)
         )
       labels:
         category: latency
         severity: page
         sloth_severity: page
-    - alert: RelnusaLegacyLatensi
+    - alert: RelnusaLegacyLatency
       annotations:
-        summary: Terlalu banyak permintaan lebih lambat dari 500 ms (target 99% di
-          bawah 500 ms).
-        title: Aplikasi lama melambat
+        summary: 'Too many requests are slower than 500 ms (target: 99% under 500
+          ms).'
+        title: Legacy app is slowing down
       expr: |
         (
-            max(slo:sli_error:ratio_rate2h{sloth_id="relnusa-legacy-latensi", sloth_service="relnusa-legacy", sloth_slo="latensi"} > (3 * 0.01)) without (sloth_window)
+            max(slo:sli_error:ratio_rate2h{sloth_id="relnusa-legacy-latency", sloth_service="relnusa-legacy", sloth_slo="latency"} > (3 * 0.01)) without (sloth_window)
             and
-            max(slo:sli_error:ratio_rate1d{sloth_id="relnusa-legacy-latensi", sloth_service="relnusa-legacy", sloth_slo="latensi"} > (3 * 0.01)) without (sloth_window)
+            max(slo:sli_error:ratio_rate1d{sloth_id="relnusa-legacy-latency", sloth_service="relnusa-legacy", sloth_slo="latency"} > (3 * 0.01)) without (sloth_window)
         )
         or
         (
-            max(slo:sli_error:ratio_rate6h{sloth_id="relnusa-legacy-latensi", sloth_service="relnusa-legacy", sloth_slo="latensi"} > (1 * 0.01)) without (sloth_window)
+            max(slo:sli_error:ratio_rate6h{sloth_id="relnusa-legacy-latency", sloth_service="relnusa-legacy", sloth_slo="latency"} > (1 * 0.01)) without (sloth_window)
             and
-            max(slo:sli_error:ratio_rate3d{sloth_id="relnusa-legacy-latensi", sloth_service="relnusa-legacy", sloth_slo="latensi"} > (1 * 0.01)) without (sloth_window)
+            max(slo:sli_error:ratio_rate3d{sloth_id="relnusa-legacy-latency", sloth_service="relnusa-legacy", sloth_slo="latency"} > (1 * 0.01)) without (sloth_window)
         )
       labels:
         category: latency

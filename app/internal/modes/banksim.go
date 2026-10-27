@@ -85,7 +85,7 @@ func BankSim(ctx context.Context) error {
 		}
 		if c.ErrorRate > 0 && rand.Float64() < c.ErrorRate {
 			bankRequests.WithLabelValues("error").Inc()
-			httpx.Error(w, http.StatusServiceUnavailable, "bank_unavailable", "bank sedang mengalami gangguan")
+			httpx.Error(w, http.StatusServiceUnavailable, "bank_unavailable", "the bank is experiencing an outage")
 			return
 		}
 		res := map[string]string{"charge_id": fmt.Sprintf("CHG-%012d", rand.Int64N(1e12)), "status": "SUCCESS"}
@@ -113,7 +113,7 @@ func BankSim(ctx context.Context) error {
 		if m := r.URL.Query().Get("mode"); m != "" {
 			p, ok := bankPresets[m]
 			if !ok {
-				httpx.Error(w, http.StatusBadRequest, "bad_mode", "mode harus normal, slow, errors atau down")
+				httpx.Error(w, http.StatusBadRequest, "bad_mode", "mode must be normal, slow, errors or down")
 				return
 			}
 			apply(p)

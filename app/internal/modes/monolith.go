@@ -86,14 +86,14 @@ func Monolith(ctx context.Context) error {
 			if errors.Is(err, context.Canceled) {
 				return
 			}
-			httpx.Error(w, http.StatusBadGateway, "payment_failed", "pembayaran gagal diproses bank, silakan coba lagi")
+			httpx.Error(w, http.StatusBadGateway, "payment_failed", "the bank could not process the payment, please try again")
 			return
 		}
 		if err != nil {
 			storeErr(w, err)
 			return
 		}
-		httpx.JSON(w, http.StatusCreated, map[string]any{"booking": b, "message": "Pembayaran berhasil. E-tiket sudah terbit."})
+		httpx.JSON(w, http.StatusCreated, map[string]any{"booking": b, "message": "Payment successful. Your e-ticket has been issued."})
 	})
 	obs.Handle(mux, "GET /api/bookings/{id}", "/api/bookings/{id}", func(w http.ResponseWriter, r *http.Request) {
 		b, err := store.GetBooking(r.Context(), pool, r.PathValue("id"))

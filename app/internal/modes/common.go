@@ -56,17 +56,17 @@ func openRedis() *redis.Client {
 func storeErr(w http.ResponseWriter, err error) {
 	switch {
 	case errors.Is(err, store.ErrNotFound):
-		httpx.Error(w, http.StatusNotFound, "not_found", "data tidak ditemukan")
+		httpx.Error(w, http.StatusNotFound, "not_found", "not found")
 	case errors.Is(err, store.ErrSoldOut):
-		httpx.Error(w, http.StatusConflict, "sold_out", "maaf, tiket untuk kereta ini sudah habis")
+		httpx.Error(w, http.StatusConflict, "sold_out", "sorry, this train is sold out")
 	case errors.Is(err, context.Canceled):
 		// The caller went away; nothing useful to send.
 	case errors.Is(err, context.DeadlineExceeded):
-		httpx.Error(w, http.StatusGatewayTimeout, "timeout", "permintaan terlalu lama diproses")
+		httpx.Error(w, http.StatusGatewayTimeout, "timeout", "the request took too long to process")
 	case errors.Is(err, errSearchDBUnavailable):
-		httpx.Error(w, http.StatusServiceUnavailable, "search_unavailable", "pencarian sementara tidak tersedia, silakan coba lagi")
+		httpx.Error(w, http.StatusServiceUnavailable, "search_unavailable", "search is temporarily unavailable, please try again")
 	default:
 		slog.Error("store error", "err", err)
-		httpx.Error(w, http.StatusServiceUnavailable, "unavailable", "sistem sedang sibuk, silakan coba lagi")
+		httpx.Error(w, http.StatusServiceUnavailable, "unavailable", "the system is busy, please try again")
 	}
 }

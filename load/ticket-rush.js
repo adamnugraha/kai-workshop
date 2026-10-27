@@ -1,4 +1,4 @@
-// "War tiket": thousands of people try to book the same popular train the
+// Ticket rush ("war tiket"): thousands of people try to book the same popular train the
 // moment sales open. Run it against the legacy site, then the modern one.
 //
 //   TARGET=legacy|modern  PEAK_RATE=150 (new buyers per second)  HOLD=90s
@@ -15,9 +15,9 @@ const HOLD = __ENV.HOLD || '90s';
 export const options = {
   hosts,
   systemTags: ['status', 'method', 'name', 'scenario', 'expected_response'],
-  tags: { target: TARGET, test: 'war-tiket' },
+  tags: { target: TARGET, test: 'ticket-rush' },
   scenarios: {
-    pembeli: {
+    buyers: {
       executor: 'ramping-arrival-rate',
       startRate: 5,
       timeUnit: '1s',
@@ -57,7 +57,7 @@ export default function (data) {
     return;
   }
   const key = uuid();
-  const body = JSON.stringify({ train_id: 'RN7', date: data.date, passenger: `Penumpang ${__VU}-${__ITER}` });
+  const body = JSON.stringify({ train_id: 'RN7', date: data.date, passenger: `Passenger ${__VU}-${__ITER}` });
   const params = {
     headers: { 'Content-Type': 'application/json', 'Idempotency-Key': key },
     tags: { name: 'booking' }, timeout: '20s', responseCallback: expected,

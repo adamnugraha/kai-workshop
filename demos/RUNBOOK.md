@@ -1,14 +1,14 @@
 # Presenter runbook
 
-How to run the talk's three parts and five live demos, what to point at, what to do when something goes wrong, and how to reset between rounds. Slide numbers refer to the two session decks: Session 1 holds part 1 (system design) and part 2 (modernisation), Session 2 holds part 3 (SRE). Every command runs on the lab VM from the repository folder.
+How to run the talk's three parts and five live demos, what to point at, what to do when something goes wrong, and how to reset between rounds. Slide numbers refer to the two session decks: Session 1 holds part 1 (system design) and part 2 (modernization), Session 2 holds part 3 (SRE). Every command runs on the lab VM from the repository folder.
 
 ## The two hours at a glance
 
 | Time | Part | Live in the lab |
 |---|---|---|
-| 0:00–0:05 | Opening (Session 1 deck, slides 1–2) | Grafana *RelNusa · Ringkasan* on the second screen |
+| 0:00–0:05 | Opening (Session 1 deck, slides 1–2) | Grafana *RelNusa · Overview* on the second screen |
 | 0:05–0:25 | Part 1 · System design (Session 1 deck, slides 3–16) | None needed; optional one-minute tour of *RelNusa 3* on slide 14 |
-| 0:25–1:00 | Part 2 · Modernisation (Session 1 deck, slides 17–29) | Demo 1 ticket rush · Demo 2 releases · Demo 3 node failure |
+| 0:25–1:00 | Part 2 · Modernization (Session 1 deck, slides 17–29) | Demo 1 ticket rush · Demo 2 releases · Demo 3 node failure |
 | 1:00–1:10 | Break | Reset checklist (below); *RelNusa 1* stays on screen |
 | 1:10–1:50 | Part 3 · SRE (Session 2 deck) | Demo 4 bank slowdown game day · Demo 5 database failover |
 | 1:50–2:00 | Roadmap, take-home, Q&A | QR code to this repository |
@@ -37,9 +37,9 @@ Part 2 is tight with three demos in 35 minutes: use the short Demo 1 runs (`./la
    `preflight` checks nodes, pods, the sites, the login on the operator tools, that the lab answers at its public address, the HTTPS certificates, the booking release, the database, chaos experiments, the bank, background traffic, Prometheus targets, the five SLOs, firing alerts, Telegram and network fault support.
 3. Browser tabs, in this order (Chrome or Edge, zoom 125% so the back row can read the panels). The addresses below are written `<site>.<domain>`; `./lab.sh info` prints the real ones (`https://app.<ip>.sslip.io` in public mode, `http://app.localhost:8080` over a tunnel):
    1. The session deck
-   2. Grafana · `RelNusa · 1 · Sebelum vs sesudah` (time range: last 15 minutes, refresh 5s)
-   3. Grafana · `RelNusa · 2 · SLO dan error budget` (last 30 minutes)
-   4. Grafana · `RelNusa · 3 · Di dalam arsitektur modern` (last 15 minutes)
+   2. Grafana · `RelNusa · 1 · Before vs after` (time range: last 15 minutes, refresh 5s)
+   3. Grafana · `RelNusa · 2 · SLOs and error budgets` (last 30 minutes)
+   4. Grafana · `RelNusa · 3 · Inside the modern architecture` (last 15 minutes)
    5. `legacy.<domain>` and `app.<domain>` side by side
    6. `rollouts.<domain>` (namespace `modern`, rollout `booking`; log in once as `admin`)
    7. `jaeger.<domain>`
@@ -55,13 +55,13 @@ No demo; the lab appears as the worked example. Keep each slide to about 90 seco
 |---|---|
 | 4–6 | 99.9% is 44 minutes a month, measured as successful requests at the entrance, and a chain of five 99.9% parts is only 99.5% |
 | 7–8 | Two ways out of the chain: redundancy (two independent 99% copies give 99.99%) and taking parts off the mandatory path (payment through a queue). Copies only help in different failure domains; for 99.9%, design to at least the zone level |
-| 9–10 | Size for the busiest minute from passenger behaviour; scale the read path out, protect the write path with the waiting room. The numbers on slide 10 are an invented example, not KAI data |
+| 9–10 | Size for the busiest minute from passenger behavior; scale the read path out, protect the write path with the waiting room. The numbers on slide 10 are an invented example, not KAI data |
 | 11 | Seats must be exact, schedules may lag a few seconds, payment may follow later |
 | 12–13 | The surge and failure patterns; all of them run in the lab |
 | 14–15 | Reference architecture and stack table. Bold entries are what the lab uses. If time allows, switch to *RelNusa 3* for a minute to show the components running |
-| 16 | The ten design review questions; the full worksheet is `templates/lembar-desain-sistem.md` |
+| 16 | The ten design review questions; the full worksheet is `templates/system-design-worksheet.md` |
 
-## Session 1 · Part 2: modernisation
+## Session 1 · Part 2: modernization
 
 ### Demo 1 · Ticket rush (slide 23, result on slide 24)
 
@@ -73,8 +73,8 @@ No demo; the lab appears as the worked example. Keep each slide to about 90 seco
 | Duration | about 2 minutes per run with the default 90 s hold |
 
 Point at, in order:
-1. *Persentase permintaan berhasil*: the legacy line falls well below 100% within seconds.
-2. *Waktu respons p95*: legacy climbs to several seconds and then to the 15 s timeout.
+1. *Percentage of successful requests*: the legacy line falls well below 100% within seconds.
+2. *p95 response time (seconds)*: legacy climbs to several seconds and then to the 15 s timeout.
 3. During the legacy run, open a search page on the legacy site. It stalls too, although only one train is being booked. That is the shared connection pool and row locks in the monolith.
 4. Run the modern spike. The success line stays flat at 100% and p95 stays in milliseconds. Buyers above capacity land in the virtual waiting room panel instead of getting an error.
 
@@ -91,7 +91,7 @@ If it goes wrong: if k6 cannot start, check `docker ps` for a leftover `k6` cont
 | 3 | `./lab.sh release bad` | v3 fails 30% of bookings. The analysis fails and Argo Rollouts aborts by itself within about a minute |
 | After | `./lab.sh release undo` | Back to v1 |
 
-Show the Argo Rollouts tab during steps 2 and 3, and *RelNusa 3 → Error booking per versi* for step 3. Only the canary share of users saw errors, and only for the length of one analysis run.
+Show the Argo Rollouts tab during steps 2 and 3, and *RelNusa 3 → Booking errors by version* for step 3. Only the canary share of users saw errors, and only for the length of one analysis run.
 
 If it goes wrong: if the rollout looks stuck, run `kubectl argo rollouts get rollout booking -n modern` to see why. `./lab.sh release undo` always returns to a clean v1.
 
@@ -99,7 +99,7 @@ If it goes wrong: if the rollout looks stuck, run `kubectl argo rollouts get rol
 
 | | |
 |---|---|
-| Show | *RelNusa 3 → Status node* and *Pod aplikasi modern yang melayani*, plus both sites |
+| Show | *RelNusa 3 → Node status* and *Modern app pods serving*, plus both sites |
 | Run | `./lab.sh node-down`, talk through it for about a minute, then `./lab.sh node-up` |
 
 What happens: the script first moves the database primary (and cluster DNS) off zone B if they are there, so this demo is about the application layer. Then the node stops.
@@ -140,8 +140,8 @@ Hypothesis on slide 13: when the bank is slow, bookings keep working and a page 
 
 | | |
 |---|---|
-| Show | *RelNusa 3 → Pembayaran dan bank*, then *RelNusa 2*, Jaeger, Telegram |
-| Start the fault | `./lab.sh chaos bank-lambat` (or create a NetworkChaos in the Chaos Mesh UI to show the tool) |
+| Show | *RelNusa 3 → Payments and the bank*, then *RelNusa 2*, Jaeger, Telegram |
+| Start the fault | `./lab.sh chaos bank-slow` (or create a NetworkChaos in the Chaos Mesh UI to show the tool) |
 | Fallback | `./lab.sh bank slow` (same effect inside the bank simulator; use it if `preflight` reported no netem) |
 | Stop the fault | `./lab.sh chaos stop` (or `./lab.sh bank normal` for the fallback) |
 
@@ -151,7 +151,7 @@ Timeline measured on the test cluster, with background traffic running for more 
 |---|---|
 | T+0:00 | Fault starts: bank answers take 3 s, the payment worker gives up after 800 ms |
 | T+0:20 | Both circuit breakers open (panel turns red). Bookings are still accepted and seats are held as "waiting for payment" |
-| T+1:20 | Page alert *RelnusaModernPenerbitanTiket* fires; Telegram gets it about 10 s later. The 1-hour burn rate passes 14.4 at about T+1:15 |
+| T+1:20 | Page alert *RelnusaModernTicketIssuance* fires; Telegram gets it about 10 s later. The 1-hour burn rate passes 14.4 at about T+1:15 |
 | T+3:00 | Fault stopped |
 | T+3:15 | Both breakers closed. The 190 payments that piled up are all paid by T+3:20, with no double charges (idempotency keys) |
 | about T+33 | Alert resolves and Telegram gets the resolved message |
@@ -159,7 +159,7 @@ Timeline measured on the test cluster, with background traffic running for more 
 Why the alert stays on for half an hour: a 3-minute total outage also trips the second page rule (6 times the burn rate over 6 hours and 30 minutes), so the alert only resolves once the 30-minute window no longer contains the outage. The 5-minute burn rate drops back to 0 about 5 minutes after the fault stops. This is the multi-window design working as intended, and a good question to ask the audience.
 
 Talking points while waiting:
-- *Ketersediaan* on *RelNusa 2* stays green the whole time. The site never failed; only ticket issuance did. That is why there is a separate journey SLO.
+- The *availability* SLO on *RelNusa 2* stays green the whole time. The site never failed; only ticket issuance did. That is why there is a separate journey SLO.
 - In Jaeger, pick service `payment-worker`, find a trace with an error, and show the bank span cut off at 800 ms.
 - Try a booking on the modern site during the fault: it is accepted and shown as waiting for payment.
 - Nothing about CPU or memory triggered anything.
@@ -170,8 +170,8 @@ Do not wait for the resolved message on stage. Move on to slide 15 and Demo 5; m
 
 | | |
 |---|---|
-| Show | *RelNusa 3 → Peran instance database*, *Error booking per versi* and *Sumber jawaban pencarian* |
-| Run | `./lab.sh chaos matikan-db-primary`, then `./lab.sh chaos stop` afterwards |
+| Show | *RelNusa 3 → Database instance roles*, *Booking errors by version* and *Search answers by source* |
+| Run | `./lab.sh chaos kill-db-primary`, then `./lab.sh chaos stop` afterwards |
 
 What happens: CloudNativePG notices the primary is gone and promotes the most up-to-date replica. Booking reconnects through the same `relnusa-db-rw` service. The old primary comes back as a replica by itself.
 
@@ -188,8 +188,8 @@ With the full profile (three instances) a replica remains for searches throughou
 
 ### Optional extras if there are questions
 
-- `./lab.sh chaos matikan-search`: kills one search pod. Users notice nothing.
-- `./lab.sh chaos matikan-payment-worker`: kills all payment workers. Jobs wait in the Redis stream and are paid when the new workers start. Discussion point: the ticket issuance SLO barely moves, because no payment attempts happen while no worker exists. Queue age is the signal for that case, which is why *Pembayaran menunggu di antrean* is on the dashboard.
+- `./lab.sh chaos kill-search`: kills one search pod. Users notice nothing.
+- `./lab.sh chaos kill-payment-worker`: kills all payment workers. Jobs wait in the Redis stream and are paid when the new workers start. Discussion point: the ticket issuance SLO barely moves, because no payment attempts happen while no worker exists. Queue age is the signal for that case, which is why *Payments waiting in the queue* is on the dashboard.
 - `./lab.sh bank errors`: half of the bank calls fail instead of being slow. Undo with `./lab.sh bank normal`.
 
 ## Troubleshooting on stage
@@ -200,7 +200,7 @@ With the full profile (three instances) a replica remains for searches throughou
 | Certificate warning, or `https://` does not open | Use the same address with `http://`; afterwards check `./lab.sh preflight` | |
 | The public IP changed (no Elastic or static IP) | `./lab.sh update-ip` (the boot service normally does this) | |
 | Grafana panels show "No data" | Check the time range (last 15 minutes), then `./lab.sh preflight` | Prometheus at `prometheus.<domain>` |
-| `chaos bank-lambat` fails with "no netem module" | `./lab.sh bank slow` | Backup video 4 |
+| `chaos bank-slow` fails with "no netem module" | `./lab.sh bank slow` | Backup video 4 |
 | Telegram message does not arrive | Show Alertmanager's alert list on *RelNusa 2* instead | Mention it and move on; the alert is visible in Grafana |
 | A node shows *NotReady* after the VM was stopped and started | `./lab.sh restart` (about 2 minutes) | |
 | A demo leaves the lab in a strange state | `./lab.sh reset`, `./lab.sh release undo`, `./lab.sh chaos stop` | `./lab.sh rebuild` takes about 3 minutes |

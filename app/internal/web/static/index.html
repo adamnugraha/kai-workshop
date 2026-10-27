@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="id">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RelNusa · Demo Pemesanan Tiket</title>
+<title>RelNusa · Ticket Booking Demo</title>
 <style>
   :root {
     --bg: #f3f5f4; --card: #ffffff; --ink: #14201c; --muted: #5b6b66; --line: #dfe5e2;
@@ -75,25 +75,25 @@
 <header>
   <div class="bar">
     <div class="logo">Rel<span>Nusa</span></div>
-    <div class="tag">demo fiktif</div>
+    <div class="tag">fictional demo</div>
     <div class="grow"></div>
-    <div id="mode" class="mode">Memuat…</div>
+    <div id="mode" class="mode">Loading…</div>
   </div>
 </header>
 
 <main>
   <section>
     <div class="card">
-      <h1>Pesan tiket kereta</h1>
-      <p class="sub">Cari jadwal, pilih kereta, lalu pesan. Semua data di sini fiktif.</p>
+      <h1>Book a train ticket</h1>
+      <p class="sub">Search the schedule, choose a train, then book. All data here is fictional.</p>
       <form id="search">
-        <div><label for="from">Dari</label><select id="from"></select></div>
-        <div><label for="to">Ke</label><select id="to"></select></div>
-        <div><label for="date">Tanggal</label><input id="date" type="date"></div>
-        <div><label for="passenger">Nama penumpang</label><input id="passenger" value="Budi Santoso" maxlength="60"></div>
+        <div><label for="from">From</label><select id="from"></select></div>
+        <div><label for="to">To</label><select id="to"></select></div>
+        <div><label for="date">Date</label><input id="date" type="date"></div>
+        <div><label for="passenger">Passenger name</label><input id="passenger" value="Budi Santoso" maxlength="60"></div>
         <div style="grid-column: 1 / -1; display: flex; gap: 10px;">
-          <button type="submit" id="go">Cari kereta</button>
-          <button type="button" class="ghost" id="hot">Kereta favorit (Mudik Ekspres)</button>
+          <button type="submit" id="go">Search trains</button>
+          <button type="button" class="ghost" id="hot">Most popular train (Mudik Ekspres)</button>
         </div>
       </form>
       <div class="hint" id="hint"></div>
@@ -104,22 +104,22 @@
 
   <aside>
     <div class="card status" id="status">
-      <h2>Status pemesanan</h2>
-      <p class="muted">Belum ada pemesanan. Pilih kereta lalu tekan <b>Pesan</b>.</p>
+      <h2>Booking status</h2>
+      <p class="muted">No booking yet. Choose a train, then press <b>Book</b>.</p>
     </div>
     <div class="card log">
-      <h2>Aktivitas permintaan</h2>
+      <h2>Request activity</h2>
       <table><tbody id="log"></tbody></table>
     </div>
   </aside>
 </main>
 
-<footer>Aplikasi demo untuk pelatihan keandalan sistem. Nama kereta, harga dan merek di halaman ini fiktif dan tidak terkait dengan operator mana pun.</footer>
+<footer>Demo application for system reliability training. The train names, prices and brand on this page are fictional and not associated with any operator.</footer>
 
 <script>
 const $ = (s) => document.querySelector(s);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const rupiah = (n) => "Rp" + Number(n).toLocaleString("id-ID");
+const rupiah = (n) => "Rp" + Number(n).toLocaleString("en-US");
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const uuid = () => (crypto.randomUUID ? crypto.randomUUID() :
   "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => { const r = Math.random() * 16 | 0; return (c === "x" ? r : (r & 0x3 | 0x8)).toString(16); }));
@@ -129,7 +129,7 @@ let busy = false;
 function log(method, path, status, ms) {
   const row = document.createElement("tr");
   const cls = status === "ERR" ? "c5" : "c" + String(status)[0];
-  const t = new Date().toLocaleTimeString("id-ID", { hour12: false });
+  const t = new Date().toLocaleTimeString("en-GB", { hour12: false });
   row.innerHTML = `<td>${t}</td><td>${method}</td><td class="path">${esc(path)}</td><td class="${cls}">${status}</td><td>${ms} ms</td>`;
   const body = $("#log");
   body.prepend(row);
@@ -149,27 +149,27 @@ async function api(method, path, body, headers = {}) {
   return { res, data, err, ms };
 }
 
-function setStatus(html) { $("#status").innerHTML = "<h2>Status pemesanan</h2>" + html; }
+function setStatus(html) { $("#status").innerHTML = "<h2>Booking status</h2>" + html; }
 
 function errorText(r) {
-  if (r.err) return "Tidak bisa terhubung ke server.";
+  if (r.err) return "Cannot connect to the server.";
   const s = r.res.status;
-  if (s === 504) return "Server terlalu lama merespons (504 Gateway Timeout).";
-  if (s === 502) return "Layanan di belakang tidak menjawab (502).";
-  if (s === 503) return r.data.error ? r.data.error + " (503)" : "Layanan tidak tersedia (503).";
-  return (r.data.error || "Terjadi gangguan") + " (" + s + ")";
+  if (s === 504) return "The server took too long to respond (504 Gateway Timeout).";
+  if (s === 502) return "The service behind the gateway did not respond (502).";
+  if (s === 503) return r.data.error ? r.data.error + " (503)" : "Service unavailable (503).";
+  return (r.data.error || "Something went wrong") + " (" + s + ")";
 }
 
 async function loadInfo() {
   const r = await api("GET", "/api/info");
-  if (!r.res || !r.res.ok) { $("#mode").textContent = "Server tidak menjawab"; $("#mode").className = "mode legacy"; return; }
+  if (!r.res || !r.res.ok) { $("#mode").textContent = "Server not responding"; $("#mode").className = "mode legacy"; return; }
   info = r.data;
   const m = $("#mode");
-  if (info.mode === "legacy") { m.textContent = "Arsitektur lama · satu server · " + info.version; m.className = "mode legacy"; }
-  else { m.textContent = "Arsitektur modern · " + info.version; m.className = "mode modern"; }
+  if (info.mode === "legacy") { m.textContent = "Legacy architecture · single server · " + info.version; m.className = "mode legacy"; }
+  else { m.textContent = "Modern architecture · " + info.version; m.className = "mode modern"; }
   $("#date").value = info.hot_date;
   $("#date").min = info.today;
-  $("#hint").innerHTML = `Rute paling ramai: <b>Mudik Ekspres (${info.hot_train})</b> Jakarta → Yogyakarta, ${info.hot_date}.`;
+  $("#hint").innerHTML = `Busiest route: <b>Mudik Ekspres (${info.hot_train})</b> Jakarta → Yogyakarta, ${info.hot_date}.`;
 }
 
 async function loadStations() {
@@ -183,12 +183,12 @@ async function loadStations() {
 async function search(e) {
   if (e) e.preventDefault();
   const from = $("#from").value, to = $("#to").value, date = $("#date").value;
-  $("#results").innerHTML = '<p class="muted"><span class="spinner"></span> Mencari jadwal…</p>';
+  $("#results").innerHTML = '<p class="muted"><span class="spinner"></span> Searching schedules…</p>';
   $("#source").textContent = "";
   const r = await api("GET", `/api/search?from=${from}&to=${to}&date=${date}`);
   if (!r.res || !r.res.ok) { $("#results").innerHTML = `<p class="muted" style="color:var(--bad)">${esc(errorText(r))}</p>`; return; }
   const list = r.data.results || [];
-  if (!list.length) { $("#results").innerHTML = '<p class="muted">Tidak ada kereta untuk rute dan tanggal ini.</p>'; return; }
+  if (!list.length) { $("#results").innerHTML = '<p class="muted">No trains for this route and date.</p>'; return; }
   $("#results").innerHTML = "";
   for (const t of list) {
     const div = document.createElement("div");
@@ -197,62 +197,62 @@ async function search(e) {
     div.innerHTML = `
       <div><div class="name">${esc(t.name)} <span class="meta">${esc(t.id)}</span></div><div class="meta">${esc(t.class)}</div></div>
       <div><div class="time">${esc(t.depart)} → ${esc(t.arrive)}</div><div class="meta">${esc(t.origin)} → ${esc(t.destination)}</div></div>
-      <div><div class="price">${rupiah(t.price)}</div><span class="seats ${cls}">${t.available === 0 ? "Habis" : t.available + " kursi"}</span></div>
-      <div><button ${t.available === 0 ? "disabled" : ""}>Pesan</button></div>`;
+      <div><div class="price">${rupiah(t.price)}</div><span class="seats ${cls}">${t.available === 0 ? "Sold out" : t.available === 1 ? "1 seat" : t.available.toLocaleString("en-US") + " seats"}</span></div>
+      <div><button ${t.available === 0 ? "disabled" : ""}>Book</button></div>`;
     div.querySelector("button").addEventListener("click", () => book(t, date));
     $("#results").appendChild(div);
   }
-  const src = { cache: "cache (cepat)", database: "database", "stale-cache": "salinan cache lama (database sedang tidak terjangkau)" }[r.data.source] || r.data.source;
-  $("#source").textContent = `Sumber data: ${src} · ${r.ms} ms`;
+  const src = { cache: "cache (fast)", database: "database", "stale-cache": "older cached copy (database currently unreachable)" }[r.data.source] || r.data.source;
+  $("#source").textContent = `Data source: ${src} · ${r.ms} ms`;
 }
 
 async function book(train, date) {
   if (busy) return;
   busy = true;
   const key = uuid();
-  const passenger = $("#passenger").value || "Penumpang";
-  setStatus(`<div class="pill wait">Memproses</div><div class="big">${esc(train.name)} · ${esc(date)}</div><p class="muted"><span class="spinner"></span> Mengirim permintaan pemesanan…</p>`);
+  const passenger = $("#passenger").value || "Passenger";
+  setStatus(`<div class="pill wait">Processing</div><div class="big">${esc(train.name)} · ${esc(date)}</div><p class="muted"><span class="spinner"></span> Sending the booking request…</p>`);
   try {
     for (let attempt = 1; attempt <= 40; attempt++) {
       const r = await api("POST", "/api/bookings", { train_id: train.id, date, passenger }, { "Idempotency-Key": key });
       if (r.res && r.res.status === 200 && r.data.status === "QUEUED") {
-        setStatus(`<div class="pill wait">Antrean virtual</div>
-          <div class="muted">Orang di depan Anda kira-kira</div><div class="queue">${r.data.position}</div>
-          <p class="muted"><span class="spinner"></span> ${esc(r.data.message)} (percobaan ke-${attempt})</p>`);
+        setStatus(`<div class="pill wait">Virtual queue</div>
+          <div class="muted">People ahead of you (approx.)</div><div class="queue">${r.data.position}</div>
+          <p class="muted"><span class="spinner"></span> ${esc(r.data.message)} (attempt ${attempt})</p>`);
         await sleep(r.data.retry_after_ms || 2000);
         continue;
       }
       if (r.res && r.res.status === 201) { showTicket(r.data.booking, r.ms); return; }
       if (r.res && (r.res.status === 202 || (r.res.status === 200 && r.data.booking))) { await waitForPayment(r.data.booking, r.ms); return; }
-      if (r.res && r.res.status === 409) { setStatus(`<div class="pill bad">Tiket habis</div><p>${esc(r.data.error)}</p>`); return; }
-      setStatus(`<div class="pill bad">Gagal</div><div class="big">Pemesanan tidak berhasil</div><p>${esc(errorText(r))}</p><p class="muted">Waktu tunggu: ${r.ms} ms</p>`);
+      if (r.res && r.res.status === 409) { setStatus(`<div class="pill bad">Sold out</div><p>${esc(r.data.error)}</p>`); return; }
+      setStatus(`<div class="pill bad">Failed</div><div class="big">Booking failed</div><p>${esc(errorText(r))}</p><p class="muted">Waiting time: ${r.ms} ms</p>`);
       return;
     }
-    setStatus(`<div class="pill bad">Antrean terlalu lama</div><p>Silakan coba lagi beberapa saat lagi.</p>`);
+    setStatus(`<div class="pill bad">The queue is taking too long</div><p>Please try again in a few moments.</p>`);
   } finally { busy = false; search(); }
 }
 
 function showTicket(b, ms) {
-  setStatus(`<div class="pill ok">Lunas</div>
-    <div class="ticket"><div class="muted">Kode e-tiket</div><div class="code">${esc(b.ticket_code)}</div>
+  setStatus(`<div class="pill ok">Paid</div>
+    <div class="ticket"><div class="muted">E-ticket code</div><div class="code">${esc(b.ticket_code)}</div>
     <div>${esc(b.train_name || b.train_id)} · ${esc(b.date)}</div><div class="muted">${esc(b.passenger)} · ${rupiah(b.amount)}</div></div>
-    ${ms ? `<p class="muted">Respons server: ${ms} ms</p>` : ""}`);
+    ${ms ? `<p class="muted">Server response: ${ms} ms</p>` : ""}`);
 }
 
 async function waitForPayment(b, ms) {
   const started = Date.now();
   for (let i = 0; i < 400; i++) {
     const secs = Math.round((Date.now() - started) / 1000);
-    setStatus(`<div class="pill wait">Kursi diamankan</div><div class="big">${esc(b.train_name || b.train_id)} · ${esc(b.date)}</div>
-      <p>Kursi sudah dikunci untuk Anda. Pembayaran sedang diproses bank (${secs} detik).</p>
-      <p class="muted"><span class="spinner"></span> Batas pembayaran: ${b.hold_expires_at ? new Date(b.hold_expires_at).toLocaleTimeString("id-ID", { hour12: false }) : "-"}</p>
-      ${ms ? `<p class="muted">Respons awal server: ${ms} ms</p>` : ""}`);
+    setStatus(`<div class="pill wait">Seat secured</div><div class="big">${esc(b.train_name || b.train_id)} · ${esc(b.date)}</div>
+      <p>Your seat is locked. The bank is processing your payment (${secs} seconds).</p>
+      <p class="muted"><span class="spinner"></span> Payment deadline: ${b.hold_expires_at ? new Date(b.hold_expires_at).toLocaleTimeString("en-GB", { hour12: false }) : "-"}</p>
+      ${ms ? `<p class="muted">Initial server response: ${ms} ms</p>` : ""}`);
     await sleep(1500);
     const r = await api("GET", "/api/bookings/" + b.id);
     if (r.res && r.res.ok && r.data.booking) {
       b = r.data.booking;
       if (b.status === "PAID") { showTicket(b); return; }
-      if (b.status === "EXPIRED") { setStatus(`<div class="pill bad">Kedaluwarsa</div><p>Pembayaran tidak selesai tepat waktu. Kursi dilepas kembali.</p>`); return; }
+      if (b.status === "EXPIRED") { setStatus(`<div class="pill bad">Expired</div><p>The payment was not completed in time, so the seat has been released.</p>`); return; }
     }
   }
 }

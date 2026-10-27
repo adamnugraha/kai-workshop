@@ -1,5 +1,5 @@
 # "Before": one application process and one database, both on the same
-# node (zona-b). No cache, no queue, no timeout on the bank, and a
+# node (zone-b). No cache, no queue, no timeout on the bank, and a
 # stop-then-start deployment.
 apiVersion: apps/v1
 kind: Deployment

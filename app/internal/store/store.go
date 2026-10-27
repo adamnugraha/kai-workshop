@@ -115,32 +115,32 @@ var seedStations = [][2]string{
 
 // Train names are invented for this demo.
 var seedTrains = []seedTrain{
-	{"RN7", "Mudik Ekspres", "JKT", "JOG", "07:00", "14:10", "Eksekutif", 520000},
-	{"RN8", "Mudik Ekspres", "JOG", "JKT", "15:00", "22:10", "Eksekutif", 520000},
-	{"RN11", "Kenari Malam", "JKT", "JOG", "20:00", "03:30", "Bisnis", 380000},
-	{"RN12", "Kenari Malam", "JOG", "JKT", "19:30", "03:00", "Bisnis", 380000},
-	{"RN15", "Cendana Pagi", "JKT", "JOG", "09:30", "17:40", "Ekonomi", 230000},
-	{"RN16", "Cendana Pagi", "JOG", "JKT", "08:00", "16:10", "Ekonomi", 230000},
-	{"RN101", "Melati Kilat", "JKT", "BDG", "06:00", "08:50", "Eksekutif", 250000},
-	{"RN102", "Melati Kilat", "BDG", "JKT", "09:30", "12:20", "Eksekutif", 250000},
-	{"RN105", "Melati Senja", "JKT", "BDG", "16:00", "18:50", "Ekonomi", 120000},
-	{"RN106", "Melati Senja", "BDG", "JKT", "17:00", "19:50", "Ekonomi", 120000},
-	{"RN21", "Elang Pantura", "JKT", "SUB", "08:00", "16:30", "Eksekutif", 600000},
-	{"RN22", "Elang Pantura", "SUB", "JKT", "08:30", "17:00", "Eksekutif", 600000},
-	{"RN23", "Rusa Malam", "JKT", "SUB", "19:00", "04:00", "Bisnis", 450000},
-	{"RN24", "Rusa Malam", "SUB", "JKT", "18:30", "03:30", "Bisnis", 450000},
-	{"RN31", "Kenanga Ekspres", "JKT", "SMG", "06:30", "12:10", "Eksekutif", 400000},
-	{"RN32", "Kenanga Ekspres", "SMG", "JKT", "13:30", "19:10", "Eksekutif", 400000},
-	{"RN41", "Kenari Siang", "BDG", "JOG", "08:00", "15:00", "Bisnis", 300000},
-	{"RN42", "Kenari Siang", "JOG", "BDG", "08:30", "15:30", "Bisnis", 300000},
-	{"RN51", "Kancil Timur", "JOG", "SUB", "06:00", "10:30", "Ekonomi", 150000},
-	{"RN52", "Kancil Timur", "SUB", "JOG", "11:30", "16:00", "Ekonomi", 150000},
-	{"RN61", "Teratai Lokal", "SUB", "MLG", "07:00", "09:30", "Ekonomi", 50000},
-	{"RN62", "Teratai Lokal", "MLG", "SUB", "10:00", "12:30", "Ekonomi", 50000},
-	{"RN71", "Camar Pagi", "JKT", "CBN", "06:15", "09:20", "Bisnis", 180000},
-	{"RN72", "Camar Pagi", "CBN", "JKT", "10:00", "13:05", "Bisnis", 180000},
-	{"RN91", "Cempaka Komuter", "JOG", "SOC", "05:30", "06:40", "Ekonomi", 20000},
-	{"RN92", "Cempaka Komuter", "SOC", "JOG", "07:00", "08:10", "Ekonomi", 20000},
+	{"RN7", "Mudik Ekspres", "JKT", "JOG", "07:00", "14:10", "Executive", 520000},
+	{"RN8", "Mudik Ekspres", "JOG", "JKT", "15:00", "22:10", "Executive", 520000},
+	{"RN11", "Kenari Malam", "JKT", "JOG", "20:00", "03:30", "Business", 380000},
+	{"RN12", "Kenari Malam", "JOG", "JKT", "19:30", "03:00", "Business", 380000},
+	{"RN15", "Cendana Pagi", "JKT", "JOG", "09:30", "17:40", "Economy", 230000},
+	{"RN16", "Cendana Pagi", "JOG", "JKT", "08:00", "16:10", "Economy", 230000},
+	{"RN101", "Melati Kilat", "JKT", "BDG", "06:00", "08:50", "Executive", 250000},
+	{"RN102", "Melati Kilat", "BDG", "JKT", "09:30", "12:20", "Executive", 250000},
+	{"RN105", "Melati Senja", "JKT", "BDG", "16:00", "18:50", "Economy", 120000},
+	{"RN106", "Melati Senja", "BDG", "JKT", "17:00", "19:50", "Economy", 120000},
+	{"RN21", "Elang Pantura", "JKT", "SUB", "08:00", "16:30", "Executive", 600000},
+	{"RN22", "Elang Pantura", "SUB", "JKT", "08:30", "17:00", "Executive", 600000},
+	{"RN23", "Rusa Malam", "JKT", "SUB", "19:00", "04:00", "Business", 450000},
+	{"RN24", "Rusa Malam", "SUB", "JKT", "18:30", "03:30", "Business", 450000},
+	{"RN31", "Kenanga Ekspres", "JKT", "SMG", "06:30", "12:10", "Executive", 400000},
+	{"RN32", "Kenanga Ekspres", "SMG", "JKT", "13:30", "19:10", "Executive", 400000},
+	{"RN41", "Kenari Siang", "BDG", "JOG", "08:00", "15:00", "Business", 300000},
+	{"RN42", "Kenari Siang", "JOG", "BDG", "08:30", "15:30", "Business", 300000},
+	{"RN51", "Kancil Timur", "JOG", "SUB", "06:00", "10:30", "Economy", 150000},
+	{"RN52", "Kancil Timur", "SUB", "JOG", "11:30", "16:00", "Economy", 150000},
+	{"RN61", "Teratai Lokal", "SUB", "MLG", "07:00", "09:30", "Economy", 50000},
+	{"RN62", "Teratai Lokal", "MLG", "SUB", "10:00", "12:30", "Economy", 50000},
+	{"RN71", "Camar Pagi", "JKT", "CBN", "06:15", "09:20", "Business", 180000},
+	{"RN72", "Camar Pagi", "CBN", "JKT", "10:00", "13:05", "Business", 180000},
+	{"RN91", "Cempaka Komuter", "JOG", "SOC", "05:30", "06:40", "Economy", 20000},
+	{"RN92", "Cempaka Komuter", "SOC", "JOG", "07:00", "08:10", "Economy", 20000},
 }
 
 // HotTrain is the train used for the ticket-rush demo.
@@ -179,6 +179,12 @@ func Migrate(ctx context.Context, pool *pgxpool.Pool) error {
 			return fmt.Errorf("seed: %w", err)
 		}
 		slog.Info("seeded reference data", "stations", len(seedStations), "trains", len(seedTrains))
+	}
+	// Earlier versions of the lab seeded the class names in Indonesian.
+	if _, err := conn.Exec(ctx, `UPDATE trains SET class = CASE class
+		WHEN 'Eksekutif' THEN 'Executive' WHEN 'Bisnis' THEN 'Business' WHEN 'Ekonomi' THEN 'Economy' END
+		WHERE class IN ('Eksekutif', 'Bisnis', 'Ekonomi')`); err != nil {
+		return fmt.Errorf("class names: %w", err)
 	}
 	return ensureInventory(ctx, conn.Conn())
 }

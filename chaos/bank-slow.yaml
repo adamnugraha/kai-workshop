@@ -4,7 +4,7 @@
 apiVersion: chaos-mesh.org/v1alpha1
 kind: NetworkChaos
 metadata:
-  name: bank-lambat
+  name: bank-slow
   namespace: bank
 spec:
   action: delay

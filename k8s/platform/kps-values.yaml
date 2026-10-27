@@ -97,11 +97,11 @@ alertmanager:
   templateFiles:
     relnusa.tmpl: |-
       {{ define "relnusa.telegram" -}}
-      {{ if eq .Status "firing" }}🔴 <b>PERINGATAN</b>{{ else }}✅ <b>PULIH</b>{{ end }} · Lab RelNusa
+      {{ if eq .Status "firing" }}🔴 <b>ALERT</b>{{ else }}✅ <b>RESOLVED</b>{{ end }} · RelNusa lab
       {{ range .Alerts -}}
       <b>{{ .Annotations.title }}</b>
       {{ .Annotations.summary }}
-      Layanan: <code>{{ .Labels.sloth_service }}</code> · SLO: <code>{{ .Labels.sloth_slo }}</code> · Tingkat: <b>{{ .Labels.severity }}</b>
+      Service: <code>{{ .Labels.sloth_service }}</code> · SLO: <code>{{ .Labels.sloth_slo }}</code> · Severity: <b>{{ .Labels.severity }}</b>
       {{ if .Annotations.runbook }}Runbook: {{ .Annotations.runbook }}{{ end }}
       {{ end -}}
       {{- end }}
@@ -122,7 +122,7 @@ grafana:
       enabled: true
       org_role: Viewer
     dashboards:
-      default_home_dashboard_path: /tmp/dashboards/RelNusa/relnusa-00-ringkasan.json
+      default_home_dashboard_path: /tmp/dashboards/RelNusa/relnusa-00-overview.json
     users:
       default_theme: light
     analytics:

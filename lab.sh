@@ -238,13 +238,13 @@ options:
       - arg: --disable-network-policy
         nodeFilters: [server:*]
     nodeLabels:
-      - label: topology.kubernetes.io/zone=zona-a
+      - label: topology.kubernetes.io/zone=zone-a
         nodeFilters: [server:0]
-      - label: topology.kubernetes.io/zone=zona-b
+      - label: topology.kubernetes.io/zone=zone-b
         nodeFilters: [agent:0]
       - label: lab.relnusa.io/legacy=true
         nodeFilters: [agent:0]
-      - label: topology.kubernetes.io/zone=zona-c
+      - label: topology.kubernetes.io/zone=zone-c
         nodeFilters: [agent:1]
   kubeconfig:
     updateDefaultKubeconfig: true
@@ -316,26 +316,29 @@ port_in_use() {
 cluster_exists() { k3d cluster list -o json 2>/dev/null | grep "\"name\":\"$CLUSTER\"" >/dev/null; }
 
 build_image() {
+  # The image name is recorded only once the image is built and on every
+  # node, so a failed build is simply retried by the next apply or rebuild.
   local img; img="$(image_ref)"
-  echo "$img" >"$STATE/image"
   if docker image inspect "$img" >/dev/null 2>&1; then
     c_ok "image $img already built"
   else
     c_info "Building application image $img"
     # shellcheck disable=SC2086
-    docker build $DOCKER_BUILD_FLAGS -t "$img" "$ROOT/app"
+    docker build $DOCKER_BUILD_FLAGS -t "$img" "$ROOT/app" ||
+      die "the application image did not build. If the output above says 429 Too Many Requests, Docker Hub's pull limit was reached: wait a few minutes, then run the same command again."
   fi
   if cluster_exists; then
     c_info "Loading image into the cluster nodes"
     local n
     for n in 1 2 3; do
       k3d image import "$img" -c "$CLUSTER" >/dev/null 2>&1 || true
-      image_on_all_nodes "$img" && return 0
+      if image_on_all_nodes "$img"; then echo "$img" >"$STATE/image"; return 0; fi
       c_warn "image import incomplete (attempt $n), retrying"
       sleep 3
     done
     die "could not load $img into every node; run ./lab.sh rebuild again"
   fi
+  echo "$img" >"$STATE/image"
 }
 
 image_on_all_nodes() {
@@ -617,6 +620,11 @@ deploy_apps() {
 
 apply_observability_content() {
   local f
+  # The dashboard files got English names; remove the old ones so Grafana
+  # does not keep a second copy of each dashboard.
+  if kubectl -n observability get configmap relnusa-dashboard-00 -o jsonpath='{.data}' 2>/dev/null | grep -q ringkasan; then
+    kubectl -n observability delete configmap relnusa-dashboard-00 relnusa-dashboard-01 --ignore-not-found >/dev/null
+  fi
   for f in "$ROOT"/k8s/slo/rules/*.yaml "$ROOT"/k8s/dashboards/*.yaml; do
     [ -f "$f" ] && render "$f" | kubectl apply -f - >/dev/null
   done
@@ -849,8 +857,8 @@ cmd_traffic() {
 cmd_spike() {
   local target="${1:-modern}" peak="${2:-150}" hold="${3:-90s}"
   [ "$target" = legacy ] || [ "$target" = modern ] || die "usage: spike legacy|modern [peak-per-second] [hold]"
-  c_info "War tiket against the $target site: up to $peak new buyers per second for $hold"
-  k6_run -e TARGET="$target" -e PEAK_RATE="$peak" -e HOLD="$hold" "$K6_IMAGE" run --out experimental-prometheus-rw /scripts/war-tiket.js
+  c_info "Ticket rush against the $target site: up to $peak new buyers per second for $hold"
+  k6_run -e TARGET="$target" -e PEAK_RATE="$peak" -e HOLD="$hold" "$K6_IMAGE" run --out experimental-prometheus-rw /scripts/ticket-rush.js
 }
 
 # ---------------------------------------------------------------- faults
@@ -868,7 +876,8 @@ chaos_stop() {
   # Remove experiments without hanging on stage: if Chaos Mesh cannot clean up
   # within 30 s (for example a network fault that never got injected), the
   # finalizers are cleared so the objects go away anyway.
-  kubectl delete -f "$ROOT/chaos/" --ignore-not-found --wait=false >/dev/null 2>&1 || true
+  # All experiments, also ones started under the names of earlier lab versions.
+  kubectl delete podchaos,networkchaos --all -A --wait=false >/dev/null 2>&1 || true
   local t=0 left
   while :; do
     left="$(kubectl get podchaos,networkchaos -A -o jsonpath='{range .items[*]}{.kind}/{.metadata.name} -n {.metadata.namespace}{"\n"}{end}' 2>/dev/null)"
@@ -886,6 +895,10 @@ chaos_stop() {
 
 cmd_chaos() {
   local name="${1:-list}"
+  case "$name" in   # names used by earlier versions of the lab
+    bank-lambat) name=bank-slow;;
+    matikan-*) name="kill-${name#matikan-}";;
+  esac
   case "$name" in
     list) ls "$ROOT/chaos" | sed 's/\.yaml$//'; kubectl get podchaos,networkchaos -A 2>/dev/null || true;;
     stop) chaos_stop; c_ok "all chaos experiments removed";;
@@ -918,12 +931,13 @@ cmd_db_primary_away() {
 }
 
 cmd_node() {
-  local action="$1" n="${2:-0}" name="k3d-$CLUSTER-agent-${2:-0}"
+  local action="$1" n="${2:-0}" name="k3d-$CLUSTER-agent-${2:-0}" zone
   case "$action" in
     down)
       pin_system_pods
       if [ "${KEEP_DB_PRIMARY:-yes}" = yes ]; then cmd_db_primary_away "$name"; fi
-      c_info "Stopping node $name (zona-$([ "$n" = 0 ] && echo b || echo c))"
+      zone="$(kubectl get node "$name" -o jsonpath='{.metadata.labels.topology\.kubernetes\.io/zone}' 2>/dev/null || true)"
+      c_info "Stopping node $name${zone:+ ($zone)}"
       docker stop "$name" >/dev/null; c_ok "node stopped. Bring it back with: ./lab.sh node-up $n";;
     up) docker start "$name" >/dev/null; c_ok "node $name started";;
   esac
@@ -957,7 +971,7 @@ cmd_reset() {
 
 cmd_telegram_test() {
   local now; now="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-  lab_curl alertmanager /api/v2/alerts -X POST -H 'Content-Type: application/json' -d "[{\"labels\":{\"alertname\":\"UjiNotifikasi\",\"sloth_service\":\"relnusa-modern\",\"sloth_slo\":\"uji\",\"severity\":\"info\"},\"annotations\":{\"title\":\"Uji jalur peringatan\",\"summary\":\"Jika pesan ini masuk, peringatan dari lab sudah sampai ke Telegram.\"},\"startsAt\":\"$now\"}]"
+  lab_curl alertmanager /api/v2/alerts -X POST -H 'Content-Type: application/json' -d "[{\"labels\":{\"alertname\":\"TestNotification\",\"sloth_service\":\"relnusa-modern\",\"sloth_slo\":\"test\",\"severity\":\"info\"},\"annotations\":{\"title\":\"Alert path test\",\"summary\":\"If you can read this, alerts from the lab reach Telegram.\"},\"startsAt\":\"$now\"}]"
   c_ok "test alert sent to Alertmanager (arrives in Telegram within about 15 seconds if configured)"
 }
 
@@ -1112,8 +1126,8 @@ cmd_preflight() {
   if [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ]; then c_ok "Telegram configured (check delivery with ./lab.sh telegram-test)"
   else c_warn "Telegram not configured; alerts are visible only in Alertmanager and Grafana"; fi
 
-  if [ -d /sys/module/sch_netem ] || modprobe -n sch_netem 2>/dev/null; then c_ok "kernel supports network delay (chaos bank-lambat)"
-  else c_warn "no netem module: use ./lab.sh bank slow instead of ./lab.sh chaos bank-lambat"; fi
+  if [ -d /sys/module/sch_netem ] || modprobe -n sch_netem 2>/dev/null; then c_ok "kernel supports network delay (chaos bank-slow)"
+  else c_warn "no netem module: use ./lab.sh bank slow instead of ./lab.sh chaos bank-slow"; fi
 
   v="$(prom_value 'sum(payment_queue_pending{namespace="modern"})')"
   [ "${v%.*}" -le 20 ] 2>/dev/null && c_ok "payment queue is empty enough (${v%.*} pending)" || c_warn "payment queue has ${v:-?} pending jobs"
@@ -1151,10 +1165,10 @@ Session 1: modernization
 Session 2: site reliability engineering
   ./lab.sh bank slow|errors|down|normal   change the simulated bank
   ./lab.sh chaos list                     list chaos experiments
-  ./lab.sh chaos bank-lambat              add 3 s network delay to the bank (Chaos Mesh)
-  ./lab.sh chaos matikan-search           kill one search pod
-  ./lab.sh chaos matikan-db-primary       kill the database primary (automatic failover)
-  ./lab.sh chaos matikan-payment-worker   kill all payment workers (queue keeps jobs)
+  ./lab.sh chaos bank-slow                add 3 s network delay to the bank (Chaos Mesh)
+  ./lab.sh chaos kill-search              kill one search pod
+  ./lab.sh chaos kill-db-primary          kill the database primary (automatic failover)
+  ./lab.sh chaos kill-payment-worker      kill all payment workers (queue keeps jobs)
   ./lab.sh chaos stop                     remove all experiments
   ./lab.sh telegram-test                  send a test alert
 

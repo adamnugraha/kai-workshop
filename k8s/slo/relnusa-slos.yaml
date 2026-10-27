@@ -13,33 +13,33 @@ metadata:
 spec:
   service: "relnusa-modern"
   labels:
-    arsitektur: modern
+    architecture: modern
     team: relnusa
   slos:
-    - name: "ketersediaan"
+    - name: "availability"
       objective: 99.9
-      description: "Permintaan penumpang yang dijawab tanpa error server (5xx) di pintu masuk."
+      description: "Passenger requests answered without a server error (5xx) at the front door."
       sli:
         events:
           errorQuery: (sum(rate(traefik_router_requests_total{router=~"modern-app-.*",code=~"5.."}[{{.window}}])) or vector(0))
           totalQuery: sum(rate(traefik_router_requests_total{router=~"modern-app-.*"}[{{.window}}]))
       alerting:
-        name: RelnusaModernKetersediaan
+        name: RelnusaModernAvailability
         labels:
           category: availability
         annotations:
-          title: "Ketersediaan aplikasi modern turun"
-          summary: "Error budget ketersediaan (target 99,9%) terpakai jauh lebih cepat dari normal."
-          runbook: "Lihat dasbor RelNusa 2 · SLO, lalu runbook 'Ketersediaan turun' di repo."
+          title: "Modern app availability is dropping"
+          summary: "The availability error budget (target 99.9%) is being used much faster than normal."
+          runbook: "Open Grafana RelNusa 2 (SLOs and error budgets), then RelNusa 3 to find the failing component."
         pageAlert:
           labels:
             severity: page
         ticketAlert:
           labels:
             severity: ticket
-    - name: "latensi"
+    - name: "latency"
       objective: 99
-      description: "Permintaan penumpang yang dijawab dalam 500 milidetik."
+      description: "Passenger requests answered within 500 milliseconds."
       sli:
         events:
           errorQuery: |
@@ -50,33 +50,33 @@ spec:
             )
           totalQuery: sum(rate(traefik_router_request_duration_seconds_count{router=~"modern-app-.*"}[{{.window}}]))
       alerting:
-        name: RelnusaModernLatensi
+        name: RelnusaModernLatency
         labels:
           category: latency
         annotations:
-          title: "Aplikasi modern melambat"
-          summary: "Terlalu banyak permintaan lebih lambat dari 500 ms (target 99% di bawah 500 ms)."
+          title: "Modern app is slowing down"
+          summary: "Too many requests are slower than 500 ms (target: 99% under 500 ms)."
         pageAlert:
           labels:
             severity: page
         ticketAlert:
           labels:
             severity: ticket
-    - name: "penerbitan-tiket"
+    - name: "ticket-issuance"
       objective: 99.9
-      description: "Upaya pembayaran yang berhasil sehingga e-tiket terbit."
+      description: "Payment attempts that succeed, so the e-ticket is issued."
       sli:
         events:
           errorQuery: sum(rate(payment_attempts_total{namespace="modern",outcome!="success"}[{{.window}}]))
           totalQuery: sum(rate(payment_attempts_total{namespace="modern"}[{{.window}}]))
       alerting:
-        name: RelnusaModernPenerbitanTiket
+        name: RelnusaModernTicketIssuance
         labels:
           category: journey
         annotations:
-          title: "E-tiket gagal terbit"
-          summary: "Pembayaran ke bank gagal atau tertunda; penumpang belum menerima e-tiket meski situs tetap cepat."
-          runbook: "Cek status bank dan circuit breaker di dasbor RelNusa 3 · Di dalam arsitektur modern."
+          title: "E-tickets are not being issued"
+          summary: "Payments to the bank are failing or delayed; passengers are not receiving e-tickets even though the site is still fast."
+          runbook: "Check the bank and the circuit breaker on Grafana RelNusa 3 (Inside the modern architecture). Runbook: templates/alert-runbook.md"
         pageAlert:
           labels:
             severity: page
@@ -92,32 +92,32 @@ metadata:
 spec:
   service: "relnusa-legacy"
   labels:
-    arsitektur: legacy
+    architecture: legacy
     team: relnusa
   slos:
-    - name: "ketersediaan"
+    - name: "availability"
       objective: 99.9
-      description: "Permintaan penumpang yang dijawab tanpa error server (5xx) di pintu masuk."
+      description: "Passenger requests answered without a server error (5xx) at the front door."
       sli:
         events:
           errorQuery: (sum(rate(traefik_router_requests_total{router=~"legacy-legacy-.*",code=~"5.."}[{{.window}}])) or vector(0))
           totalQuery: sum(rate(traefik_router_requests_total{router=~"legacy-legacy-.*"}[{{.window}}]))
       alerting:
-        name: RelnusaLegacyKetersediaan
+        name: RelnusaLegacyAvailability
         labels:
           category: availability
         annotations:
-          title: "Ketersediaan aplikasi lama turun"
-          summary: "Error budget ketersediaan aplikasi lama (target 99,9%) terpakai jauh lebih cepat dari normal."
+          title: "Legacy app availability is dropping"
+          summary: "The legacy app's availability error budget (target 99.9%) is being used much faster than normal."
         pageAlert:
           labels:
             severity: page
         ticketAlert:
           labels:
             severity: ticket
-    - name: "latensi"
+    - name: "latency"
       objective: 99
-      description: "Permintaan penumpang yang dijawab dalam 500 milidetik."
+      description: "Passenger requests answered within 500 milliseconds."
       sli:
         events:
           errorQuery: |
@@ -128,12 +128,12 @@ spec:
             )
           totalQuery: sum(rate(traefik_router_request_duration_seconds_count{router=~"legacy-legacy-.*"}[{{.window}}]))
       alerting:
-        name: RelnusaLegacyLatensi
+        name: RelnusaLegacyLatency
         labels:
           category: latency
         annotations:
-          title: "Aplikasi lama melambat"
-          summary: "Terlalu banyak permintaan lebih lambat dari 500 ms (target 99% di bawah 500 ms)."
+          title: "Legacy app is slowing down"
+          summary: "Too many requests are slower than 500 ms (target: 99% under 500 ms)."
         pageAlert:
           labels:
             severity: page

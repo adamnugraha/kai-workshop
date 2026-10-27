@@ -56,7 +56,7 @@ func Gateway(ctx context.Context) error {
 				"status":         "QUEUED",
 				"position":       pos,
 				"retry_after_ms": 1500 + rand.IntN(1500),
-				"message":        "Anda sedang berada di antrean virtual. Jangan tutup halaman ini, kami akan mencoba lagi otomatis.",
+				"message":        "You are in the virtual queue. Please keep this page open; we will retry automatically.",
 			})
 			return
 		}
@@ -90,9 +90,9 @@ func newProxy(name, target string, timeout time.Duration) *httputil.ReverseProxy
 			case errors.Is(err, context.Canceled):
 				return
 			case bank.IsTimeout(err):
-				httpx.Error(w, http.StatusGatewayTimeout, "upstream_timeout", "layanan terlalu lama merespons")
+				httpx.Error(w, http.StatusGatewayTimeout, "upstream_timeout", "the service took too long to respond")
 			default:
-				httpx.Error(w, http.StatusBadGateway, "upstream_unavailable", "layanan sementara tidak tersedia")
+				httpx.Error(w, http.StatusBadGateway, "upstream_unavailable", "the service is temporarily unavailable")
 			}
 		},
 	}

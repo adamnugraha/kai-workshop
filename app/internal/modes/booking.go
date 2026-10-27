@@ -81,7 +81,7 @@ func Booking(ctx context.Context) error {
 		}
 		if faultRate > 0 && rand.Float64() < faultRate {
 			bookingOutcomes.WithLabelValues("fault").Inc()
-			httpx.Error(w, http.StatusInternalServerError, "internal", "terjadi kesalahan internal (versi "+obs.Version+")")
+			httpx.Error(w, http.StatusInternalServerError, "internal", "internal error (version "+obs.Version+")")
 			return
 		}
 		req, err := httpx.ParseBooking(r)
@@ -102,7 +102,7 @@ func Booking(ctx context.Context) error {
 		if replayed {
 			bookingOutcomes.WithLabelValues("replayed").Inc()
 			httpx.JSON(w, http.StatusOK, map[string]any{"booking": b, "replayed": true,
-				"message": "Permintaan yang sama sudah kami terima sebelumnya; ini data pemesanan Anda."})
+				"message": "We have already received this request; here is your booking."})
 			return
 		}
 		if err := enqueue(r.Context(), rdb, b); err != nil {
@@ -111,7 +111,7 @@ func Booking(ctx context.Context) error {
 		}
 		bookingOutcomes.WithLabelValues("held").Inc()
 		httpx.JSON(w, http.StatusAccepted, map[string]any{"booking": b,
-			"message": "Kursi Anda sudah diamankan. Pembayaran sedang diproses."})
+			"message": "Your seat is secured. Your payment is being processed."})
 	})
 	obs.Handle(mux, "GET /api/bookings/{id}", "/api/bookings/{id}", func(w http.ResponseWriter, r *http.Request) {
 		b, err := store.GetBooking(r.Context(), pool, r.PathValue("id"))

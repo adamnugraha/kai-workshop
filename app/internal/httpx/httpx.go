@@ -49,13 +49,13 @@ func ParseBooking(r *http.Request) (BookingRequest, error) {
 	req.TrainID = strings.ToUpper(strings.TrimSpace(req.TrainID))
 	req.Passenger = strings.TrimSpace(req.Passenger)
 	if !trainRe.MatchString(req.TrainID) {
-		return req, errors.New("train_id tidak valid")
+		return req, errors.New("invalid train_id")
 	}
 	if _, err := time.Parse("2006-01-02", req.Date); err != nil {
-		return req, errors.New("date harus berformat YYYY-MM-DD")
+		return req, errors.New("date must use the YYYY-MM-DD format")
 	}
 	if req.Passenger == "" {
-		req.Passenger = "Penumpang"
+		req.Passenger = "Passenger"
 	}
 	if len(req.Passenger) > 60 {
 		req.Passenger = req.Passenger[:60]
@@ -70,10 +70,10 @@ func SearchParams(r *http.Request) (from, to, date string, err error) {
 	to = strings.ToUpper(q.Get("to"))
 	date = q.Get("date")
 	if !codeRe.MatchString(from) || !codeRe.MatchString(to) {
-		return "", "", "", errors.New("kode stasiun tidak valid")
+		return "", "", "", errors.New("invalid station code")
 	}
 	if _, e := time.Parse("2006-01-02", date); e != nil {
-		return "", "", "", errors.New("date harus berformat YYYY-MM-DD")
+		return "", "", "", errors.New("date must use the YYYY-MM-DD format")
 	}
 	return from, to, date, nil
 }

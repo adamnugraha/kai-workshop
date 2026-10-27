@@ -1,41 +1,41 @@
-# Lab Ketersediaan RelNusa
+# RelNusa Availability Lab
 
-Lab ini dipakai untuk sesi **Mencapai ketersediaan 99,9% ke atas**. Isinya satu aplikasi pemesanan tiket kereta fiktif bernama **RelNusa** dalam dua arsitektur, ditambah perangkat operasional yang biasa dipakai tim *site reliability engineering* (SRE). Semua komponen bersifat open source dan berjalan di satu mesin Linux, sehingga bisa dipasang ulang di pusat data sendiri, di VMware, atau di cloud mana pun.
+This lab accompanies the session **Achieving 99.9% Availability and Beyond**. It contains a fictional train-ticket booking application called **RelNusa** in two architectures, plus the operational tooling that site reliability engineering (SRE) teams commonly use. Every component is open source and runs on a single Linux machine, so you can reinstall it in your own data center, on VMware or in any cloud.
 
-> RelNusa adalah aplikasi fiktif. Nama kereta, harga dan mereknya rekaan dan tidak mewakili sistem milik organisasi mana pun.
+> RelNusa is a fictional application. Its train names, prices and brand are invented and do not represent any organization's systems.
 
-## Isi lab
+## What is in the lab
 
-| Bagian | Isi | Yang ingin ditunjukkan |
+| Part | Contents | What it shows |
 |---|---|---|
-| Sistem lama | Satu proses monolit dan satu database di satu node | Pola umum sistem lama: kunci baris database ditahan selama memanggil bank, tanpa cache, tanpa antrean, tanpa batas waktu, deploy dengan cara hentikan lalu jalankan |
-| Sistem modern | Gateway dengan ruang tunggu virtual, layanan pencarian dengan cache, layanan pemesanan dengan antrean pembayaran, worker pembayaran dengan circuit breaker, PostgreSQL satu primary dan dua replika dengan failover otomatis | Pola arsitektur yang menaikkan ketersediaan |
-| Operasional | Prometheus, Grafana, Alertmanager (ke Telegram), OpenTelemetry dan Jaeger, SLO dan error budget (Sloth), rilis bertahap (Argo Rollouts), uji lonjakan (k6), eksperimen kegagalan (Chaos Mesh) | Cara mengukur, memberi peringatan, merilis dengan aman dan berlatih menghadapi gangguan |
-| Bank simulasi | Penyedia pembayaran tiruan yang bisa dibuat lambat, sering gagal atau mati | Ketergantungan eksternal yang tidak bisa kita kendalikan |
+| Legacy system | One monolith process and one database on a single node | Common legacy patterns: database row locks held while calling the bank, no cache, no queue, no timeouts, deployments by stopping and restarting |
+| Modern system | A gateway with a virtual waiting room, a search service with a cache, a booking service with a payment queue, a payment worker with a circuit breaker, and PostgreSQL with one primary and two replicas and automatic failover | Architecture patterns that raise availability |
+| Operations | Prometheus, Grafana, Alertmanager (to Telegram), OpenTelemetry and Jaeger, SLOs and error budgets (Sloth), progressive delivery (Argo Rollouts), load testing (k6), failure experiments (Chaos Mesh) | How to measure, alert, release safely and practice handling failures |
+| Simulated bank | A mock payment provider that can be made slow, error-prone or unavailable | An external dependency outside our control |
 
-## Arsitektur
+## Architecture
 
 ```mermaid
 flowchart LR
-  K6[Penumpang simulasi k6] --> T[Ingress Traefik]
-  subgraph lama[Sistem lama: satu node]
-    M[Monolit] --> PL[(PostgreSQL tunggal)]
+  K6[Simulated passengers, k6] --> T[Traefik ingress]
+  subgraph legacy[Legacy system: one node]
+    M[Monolith] --> PL[(Single PostgreSQL)]
   end
-  subgraph modern[Sistem modern: tiga node, tiga zona]
-    G[Gateway + ruang tunggu] --> S[Search x2..6]
-    G --> B[Booking x4, rilis canary]
+  subgraph modern[Modern system: three nodes, three zones]
+    G[Gateway + waiting room] --> S[Search x2..6]
+    G --> B[Booking x4, canary releases]
     S --> R[(Redis: cache)]
-    S --> RO[(PostgreSQL replika)]
+    S --> RO[(PostgreSQL replicas)]
     B --> RW[(PostgreSQL primary)]
-    B --> Q[(Redis: antrean pembayaran)]
+    B --> Q[(Redis: payment queue)]
     Q --> W[Payment worker + circuit breaker]
   end
   T --> M
   T --> G
-  M --> BANK[Bank simulasi]
+  M --> BANK[Simulated bank]
   W --> BANK
-  subgraph ops[Operasional]
-    P[Prometheus + aturan SLO] --> GR[Grafana]
+  subgraph ops[Operations]
+    P[Prometheus + SLO rules] --> GR[Grafana]
     P --> AM[Alertmanager] --> TG[Telegram]
     O[OpenTelemetry Collector] --> J[Jaeger]
     C[Chaos Mesh]
@@ -43,133 +43,133 @@ flowchart LR
   end
 ```
 
-Lab berjalan di Kubernetes ringan (k3s di dalam Docker lewat k3d) dengan tiga node yang diberi label zona-a, zona-b dan zona-c. Komponen platform berada di node zona-a, yang tidak pernah dimatikan dalam demo. Sistem lama sengaja ditempatkan seluruhnya di node zona-b.
+The lab runs on lightweight Kubernetes (k3s inside Docker, via k3d) with three nodes labeled zone-a, zone-b and zone-c. The platform components run on the zone-a node, which the demos never stop. The whole legacy system is deliberately placed on the zone-b node.
 
-## Kebutuhan
+## Requirements
 
-- Satu VM Ubuntu 22.04 atau 24.04, 8 vCPU, 32 GB RAM, disk 100 GB (minimum 4 vCPU dan 16 GB untuk profil `small`)
-- Akses internet keluar ke Docker Hub, GitHub, ghcr.io, quay.io dan registry.k8s.io
-- Akses masuk: SSH, ditambah TCP 80 dan 443 bila lab dibuka lewat IP publik (mode `public`, bawaan untuk VM di cloud)
-- Port 80 dan 443 (serta 9090 di 127.0.0.1) harus kosong; bila 80 atau 9090 sudah terpakai, ubah `HTTP_PORT` dan `PROM_PORT` di `lab.env` sebelum memasang (HTTPS hanya aktif bila lab memakai port 80)
+- One Ubuntu 22.04 or 24.04 VM with 8 vCPUs, 32 GB of RAM and a 100 GB disk (at least 4 vCPUs and 16 GB for the `small` profile)
+- Outbound internet access to Docker Hub, GitHub, ghcr.io, quay.io and registry.k8s.io
+- Inbound access: SSH, plus TCP 80 and 443 when the lab is opened on the public IP (`public` mode, the default for cloud VMs)
+- Ports 80 and 443 (and 9090 on 127.0.0.1) must be free; if 80 or 9090 is already in use, change `HTTP_PORT` and `PROM_PORT` in `lab.env` before installing (HTTPS is only enabled when the lab uses port 80)
 
-Panduan langkah demi langkah: [AWS](docs/aws-setup.md), [Google Cloud](docs/gcp-setup.md), [server sendiri](docs/server-setup.md), dan [peringatan Telegram](docs/telegram-setup.md).
+Step-by-step guides: [AWS](docs/aws-setup.md), [Google Cloud](docs/gcp-setup.md), [your own server](docs/server-setup.md) and [Telegram alerts](docs/telegram-setup.md).
 
-## Cara memasang
+## Installing
 
-Sekaligus dari VM baru (dipakai juga sebagai *user data* di AWS atau *startup script* di GCP):
+In one go on a new VM (also used as *user data* on AWS or a *startup script* on GCP):
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/adamnugraha/kai-workshop/main/bootstrap.sh | sudo bash
 ```
 
-Atau langkah demi langkah:
+Or step by step:
 
 ```bash
 git clone https://github.com/adamnugraha/kai-workshop.git
 cd kai-workshop
-cp lab.env.example lab.env     # pilih LAB_ACCESS, token Telegram, profil small
-sudo ./lab.sh install-deps     # Docker, k3d, kubectl, helm, plugin kubectl
-./lab.sh up                    # 15 sampai 25 menit pada pemasangan pertama
-./lab.sh info                  # alamat dan kata sandi
+cp lab.env.example lab.env     # choose LAB_ACCESS, the Telegram token, the small profile
+sudo ./lab.sh install-deps     # Docker, k3d, kubectl, helm, kubectl plugins
+./lab.sh up                    # 15 to 25 minutes on the first install
+./lab.sh info                  # addresses and the password
 ```
 
-Memperbarui lab yang sudah terpasang ke versi terbaru repositori ini (data dan rilis tetap):
+To update an installed lab to the latest version of this repository (data and releases are kept):
 
 ```bash
 ./lab.sh update
 ```
 
-Salinan lama yang belum punya perintah `update` cukup sekali menjalankan `sudo git pull && ./lab.sh apply`.
+Older copies that do not have the `update` command yet only need to run `sudo git pull && ./lab.sh apply` once.
 
-## Cara mengakses
+## Accessing the lab
 
-Ada dua mode, dipilih dengan `LAB_ACCESS` di `lab.env` sebelum `./lab.sh up`.
+There are two modes, chosen with `LAB_ACCESS` in `lab.env` before `./lab.sh up`.
 
-**Mode `public`** (bawaan untuk pemasangan lewat `bootstrap.sh`): semua alamat memakai IP publik VM melalui layanan DNS gratis [sslip.io](https://sslip.io), jadi tidak perlu mengatur DNS atau SSH tunnel. Lab meminta sertifikat HTTPS gratis dari Let's Encrypt untuk setiap alamat, sehingga `https://` langsung bisa dipakai; `http://` tetap berfungsi. Buka TCP 80 dan 443 di firewall (Let's Encrypt memeriksa setiap nama lewat port 80).
+**`public` mode** (the default when installing with `bootstrap.sh`): every address uses the VM's public IP through the free DNS service [sslip.io](https://sslip.io), so there is no DNS or SSH tunnel to set up. The lab requests free HTTPS certificates from Let's Encrypt for every address, so `https://` works right away; `http://` keeps working too. Open TCP 80 and 443 in the firewall (Let's Encrypt checks every name over port 80).
 
-| Alamat | Isi | Login |
+| Address | Contents | Login |
 |---|---|---|
-| `https://legacy.<ip>.sslip.io` | Situs sistem lama | Tidak perlu |
-| `https://app.<ip>.sslip.io` | Situs sistem modern | Tidak perlu |
-| `https://grafana.<ip>.sslip.io` | Dasbor | Melihat tanpa login; mengubah sebagai `admin` |
-| `https://jaeger.<ip>.sslip.io`, `chaos.`, `rollouts.`, `prometheus.`, `alertmanager.` | Alat operator | `admin` dan kata sandi dari `./lab.sh info` |
+| `https://legacy.<ip>.sslip.io` | Legacy system site | Not needed |
+| `https://app.<ip>.sslip.io` | Modern system site | Not needed |
+| `https://grafana.<ip>.sslip.io` | Dashboards | View without logging in; edit as `admin` |
+| `https://jaeger.<ip>.sslip.io`, `chaos.`, `rollouts.`, `prometheus.`, `alertmanager.` | Operator tools | `admin` and the password from `./lab.sh info` |
 
-Alamat persisnya ditampilkan oleh `./lab.sh info`. Bila sertifikat belum terbit (misalnya port 80 atau 443 masih tertutup), `./lab.sh info` menampilkan alamat `http://` dan `./lab.sh preflight` menjelaskan sebabnya. Untuk mematikan HTTPS, isi `LAB_HTTPS=off` di `lab.env` lalu jalankan `./lab.sh apply`.
+`./lab.sh info` shows the exact addresses. If the certificates have not been issued yet (for example because port 80 or 443 is still closed), `./lab.sh info` shows `http://` addresses and `./lab.sh preflight` explains why. To turn HTTPS off, set `LAB_HTTPS=off` in `lab.env` and run `./lab.sh apply`.
 
-Bila IP berubah setelah VM dimatikan dan dinyalakan, nama-nama itu ikut berubah dengan sendirinya, termasuk sertifikatnya. Untuk alamat yang tetap, pakai Elastic IP (AWS) atau IP statis (GCP), atau domain sendiri lewat `LAB_DOMAIN`.
+If the IP changes after the VM is stopped and started, these names follow it automatically, certificates included. For fixed addresses, use an Elastic IP (AWS), a static IP (GCP) or your own domain through `LAB_DOMAIN`.
 
-**Mode `tunnel`**: semua hanya terbuka di 127.0.0.1 pada VM, cocok untuk server tanpa IP publik. Dari laptop:
+**`tunnel` mode**: everything listens only on 127.0.0.1 on the VM, which suits servers without a public IP. From your laptop:
 
 ```bash
-ssh -N -L 8080:127.0.0.1:80 ubuntu@ALAMAT-VM
+ssh -N -L 8080:127.0.0.1:80 ubuntu@VM-ADDRESS
 ```
 
-Lalu buka `http://app.localhost:8080`, `http://grafana.localhost:8080` dan seterusnya di Chrome atau Edge (keduanya mengenali `*.localhost` tanpa pengaturan DNS).
+Then open `http://app.localhost:8080`, `http://grafana.localhost:8080` and so on in Chrome or Edge (both resolve `*.localhost` without any DNS setup).
 
-## Skenario demo
+## Demo scenarios
 
-| Perintah | Yang terjadi | Yang terlihat |
+| Command | What happens | What you see |
 |---|---|---|
-| `./lab.sh spike legacy` | Lonjakan pembeli tiket ke sistem lama | Waktu respons naik ke belasan detik, error 504, seluruh situs ikut lambat termasuk pencarian |
-| `./lab.sh spike modern` | Lonjakan yang sama ke sistem modern | Tanpa error; pembeli di atas kapasitas masuk antrean virtual; search bertambah replika |
-| `./lab.sh legacy-deploy` | Deploy monolit dengan cara hentikan lalu jalankan | Situs lama mati sekitar 15 detik |
-| `./lab.sh release good` | Rilis canary booking v2 | Argo Rollouts menaikkan versi baru bertahap tanpa error |
-| `./lab.sh release bad` | Rilis canary booking dengan bug | Analisis Prometheus menghentikan rilis otomatis; sebagian besar pengguna tidak terdampak |
-| `./lab.sh node-down` | Satu node (zona-b) dimatikan | Sistem lama mati total; sistem modern tetap melayani |
-| `./lab.sh chaos bank-lambat` | Bank diberi jeda jaringan 3 detik (butuh modul kernel netem; bila tidak ada, pakai `./lab.sh bank slow`) | Circuit breaker terbuka, kursi tetap bisa dikunci, alert SLO penerbitan tiket menyala dan terkirim ke Telegram |
-| `./lab.sh chaos matikan-db-primary` | Primary PostgreSQL dimatikan | Replika naik menjadi primary dalam hitungan detik; pencarian tetap jalan dari cache |
-| `./lab.sh reset` | Mengosongkan pemesanan dan mengisi ulang kursi | Siap untuk putaran demo berikutnya |
+| `./lab.sh spike legacy` | A rush of ticket buyers hits the legacy system | Response times climb to 10 seconds or more, 504 errors appear, and the whole site slows down, search included |
+| `./lab.sh spike modern` | The same rush hits the modern system | No errors; buyers above capacity wait in the virtual queue; search adds replicas |
+| `./lab.sh legacy-deploy` | The monolith is deployed by stopping and restarting it | The legacy site is down for about 15 seconds |
+| `./lab.sh release good` | Canary release of booking v2 | Argo Rollouts shifts traffic to the new version step by step, with no errors |
+| `./lab.sh release bad` | Canary release of a booking version with a bug | Prometheus analysis stops the release automatically; most users are not affected |
+| `./lab.sh node-down` | One node (zone-b) is shut down | The legacy system goes down completely; the modern system keeps serving |
+| `./lab.sh chaos bank-slow` | The bank gets 3 seconds of network delay (needs the netem kernel module; without it, use `./lab.sh bank slow`) | The circuit breaker opens, seats can still be locked, and the ticket issuance SLO alert fires and reaches Telegram |
+| `./lab.sh chaos kill-db-primary` | The PostgreSQL primary is killed | A replica is promoted to primary within seconds; search keeps working from the cache |
+| `./lab.sh reset` | Clears bookings and refills seats | Ready for the next demo round |
 
-Daftar lengkap ada di `./lab.sh help`. Sebelum demo, jalankan `./lab.sh preflight` untuk memeriksa semuanya sekaligus. Langkah demo untuk pembicara ada di [demos/RUNBOOK.md](demos/RUNBOOK.md) (bahasa Inggris).
+`./lab.sh help` lists every command. Before a demo, run `./lab.sh preflight` to check everything at once. The speaker's demo steps are in [demos/RUNBOOK.md](demos/RUNBOOK.md).
 
-## Templat untuk tim
+## Templates for teams
 
-Folder [templates/](templates/README.md) berisi templat yang bisa langsung dipakai: lembar desain sistem, lembar kerja SLO, kebijakan error budget, matriks tingkat keparahan, runbook peringatan, postmortem, rencana game day, kartu penilaian modernisasi dan rencana 90 hari.
+The [templates/](templates/README.md) folder holds ready-to-use templates: a system design worksheet, an SLO worksheet, an error budget policy, a severity matrix, an alert runbook, a postmortem, a game day plan, a modernization scorecard and a 90-day plan.
 
-## SLO yang dipakai
+## SLOs in the lab
 
-| Layanan | SLO | Target | Diukur di |
+| Service | SLO | Target | Measured at |
 |---|---|---|---|
-| relnusa-modern, relnusa-legacy | Ketersediaan: permintaan tanpa error server | 99,9% | Traefik (sisi pengguna) |
-| relnusa-modern, relnusa-legacy | Latensi: permintaan di bawah 500 ms | 99% | Traefik |
-| relnusa-modern | Penerbitan tiket: upaya pembayaran yang berhasil | 99,9% | Payment worker |
+| relnusa-modern, relnusa-legacy | Availability: requests without a server error | 99.9% | Traefik (the user's side) |
+| relnusa-modern, relnusa-legacy | Latency: requests under 500 ms | 99% | Traefik |
+| relnusa-modern | Ticket issuance: payment attempts that succeed | 99.9% | Payment worker |
 
-Definisi ada di `k8s/slo/relnusa-slos.yaml`. Aturan Prometheus dibuat dengan `k8s/slo/generate.sh` (alat Sloth), termasuk alert *multi-window multi-burn-rate* sesuai SRE Workbook dari Google.
+The definitions are in `k8s/slo/relnusa-slos.yaml`. The Prometheus rules are generated with `k8s/slo/generate.sh` (the Sloth tool), including multi-window, multi-burn-rate alerts as described in Google's Site Reliability Workbook.
 
-## Struktur repositori
+## Repository layout
 
 ```
-app/            kode aplikasi (Go), satu image untuk semua peran
-k8s/cluster/    pengaturan ingress Traefik
-k8s/platform/   nilai Helm untuk monitoring, database, chaos, rilis; collector dan Jaeger
-k8s/apps/       bank simulasi, sistem lama, sistem modern, monitor metrik
-k8s/slo/        definisi SLO dan aturan Prometheus hasil generate
-k8s/dashboards/ dasbor Grafana (dibuat oleh tools/make_dashboards.py)
-load/           skrip k6: lalu lintas harian dan "war tiket"
-chaos/          eksperimen Chaos Mesh
-demos/          runbook demo untuk pembicara
-docs/           panduan memasang di AWS, GCP atau server sendiri, dan menyiapkan Telegram
-templates/      templat desain sistem, SLO, error budget, insiden, postmortem, game day dan modernisasi
-lab.sh          satu pintu untuk memasang dan menjalankan demo
+app/            application code (Go), one image for every role
+k8s/cluster/    Traefik ingress settings
+k8s/platform/   Helm values for monitoring, database, chaos and releases; collector and Jaeger
+k8s/apps/       simulated bank, legacy system, modern system, metric monitors
+k8s/slo/        SLO definitions and the generated Prometheus rules
+k8s/dashboards/ Grafana dashboards (generated by tools/make_dashboards.py)
+load/           k6 scripts: everyday traffic and the ticket rush
+chaos/          Chaos Mesh experiments
+demos/          the speaker's demo runbook
+docs/           guides for installing on AWS, GCP or your own server, and for setting up Telegram
+templates/      templates for system design, SLOs, error budgets, incidents, postmortems, game days and modernization
+lab.sh          a single entry point to install the lab and run the demos
 ```
 
-## Membawa pola ini ke sistem sendiri
+## Taking these patterns to your own systems
 
-| Di lab | Padanan di produksi |
+| In the lab | Production equivalent |
 |---|---|
-| k3d di satu VM | Cluster Kubernetes di beberapa server atau zona (Rancher, OpenShift, EKS, GKE, AKS) |
-| CloudNativePG | Operator yang sama di produksi, atau layanan database terkelola dengan replika lintas zona |
-| Redis satu instance | Redis dengan replikasi (Sentinel atau cluster), atau layanan terkelola |
-| Ruang tunggu di gateway | Virtual waiting room di CDN atau API gateway |
-| Bank simulasi | Mitra pembayaran nyata; pola timeout, circuit breaker dan kunci idempotensi tetap sama |
-| Telegram | Kanal on-call tim (Telegram, Slack, PagerDuty, Opsgenie) |
+| k3d on one VM | A Kubernetes cluster across several servers or zones (Rancher, OpenShift, EKS, GKE, AKS) |
+| CloudNativePG | The same operator in production, or a managed database service with replicas across zones |
+| A single Redis instance | Redis with replication (Sentinel or cluster mode), or a managed service |
+| Waiting room in the gateway | A virtual waiting room in the CDN or API gateway |
+| Simulated bank | Real payment partners; the timeout, circuit breaker and idempotency key patterns stay the same |
+| Telegram | The team's on-call channel (Telegram, Slack, PagerDuty, Opsgenie) |
 
-## Catatan
+## Notes
 
-- Lab dibuat untuk pelatihan. Di mode `public` alamat memakai HTTPS dengan sertifikat Let's Encrypt, dan HTTP biasa tetap tersedia; alat operator dilindungi login sederhana, dan tidak ada data nyata di dalam lab. Hapus VM setelah acara.
-- Setiap kali cluster dibuat ulang (`./lab.sh down` lalu `./lab.sh up`), lab meminta sertifikat baru. Let's Encrypt hanya menerbitkan lima sertifikat per minggu untuk nama yang sama, jadi jangan membuat ulang cluster lebih sering dari itu; `./lab.sh restart`, `./lab.sh apply` dan `./lab.sh update` memakai sertifikat yang sudah ada.
-- Angka kinerja di lab bergantung pada ukuran VM dan tidak bisa langsung dibandingkan dengan sistem produksi mana pun.
+- The lab is built for training. In `public` mode the addresses use HTTPS with Let's Encrypt certificates and plain HTTP stays available; the operator tools sit behind a simple login, and the lab holds no real data. Delete the VM after the event.
+- Every time the cluster is recreated (`./lab.sh down`, then `./lab.sh up`), the lab requests new certificates. Let's Encrypt issues only five certificates per week for the same set of names, so do not recreate the cluster more often than that; `./lab.sh restart`, `./lab.sh apply` and `./lab.sh update` reuse the existing certificates.
+- Performance figures in the lab depend on the VM size and cannot be compared directly with any production system.
 
-## Lisensi
+## License
 
 Apache License 2.0.

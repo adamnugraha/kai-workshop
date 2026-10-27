@@ -43,7 +43,7 @@ export function journey() {
   const options = trainsByRoute[`${from}-${to}`];
   const train = options[Math.floor(Math.random() * options.length)];
   const r = http.post(`${base}/api/bookings`,
-    JSON.stringify({ train_id: train, date, passenger: 'Penumpang Harian' }),
+    JSON.stringify({ train_id: train, date, passenger: 'Daily Passenger' }),
     { headers: { 'Content-Type': 'application/json', 'Idempotency-Key': uuid() }, tags: { name: 'booking' }, timeout: '20s', responseCallback: expected });
   if (r.status !== 200 && r.status !== 201 && r.status !== 202) return;
   let id = '';

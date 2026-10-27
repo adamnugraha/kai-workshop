@@ -166,7 +166,11 @@ cmd_install_deps() {
   c_info "Base packages"
   if command -v apt-get >/dev/null; then
     export DEBIAN_FRONTEND=noninteractive
-    apt-get update -q
+    # A fresh VM may still be running its own package updates: wait for the
+    # package lock instead of failing (the Docker installer uses apt too).
+    echo 'DPkg::Lock::Timeout "900";' >/etc/apt/apt.conf.d/99-relnusa-lock-wait
+    local n
+    for n in 1 2 3 4 5; do apt-get update -q && break; c_warn "apt-get update failed (attempt $n of 5); retrying in 20 s"; sleep 20; done
     apt-get install -y -q curl ca-certificates git jq tar gzip openssl >/dev/null
     apt-get install -y -q "linux-modules-extra-$(uname -r)" >/dev/null 2>&1 || c_warn "linux-modules-extra not available (network fault injection may be limited)"
   fi

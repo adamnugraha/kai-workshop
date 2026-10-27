@@ -9,6 +9,25 @@ set -Eeuo pipefail
 STEP="start"
 step() { STEP="$*"; echo "== $(date -Is) $*"; }
 
+wait_for_apt() {
+  # Fresh cloud VMs run their own package updates right after boot and hold
+  # the package lock while they do. Pause new runs, let a running one finish,
+  # and make apt wait for the lock instead of failing.
+  systemctl stop apt-daily.timer apt-daily-upgrade.timer >/dev/null 2>&1 || true
+  systemd-run --quiet --wait --property=After=apt-daily.service --property=After=apt-daily-upgrade.service /bin/true >/dev/null 2>&1 || true
+  echo 'DPkg::Lock::Timeout "900";' >/etc/apt/apt.conf.d/99-relnusa-lock-wait
+}
+
+apt_retry() {
+  local i
+  for i in 1 2 3 4 5; do
+    apt-get "$@" && return 0
+    echo "apt-get $1 did not finish (attempt $i of 5); trying again in 20 seconds"
+    sleep 20
+  done
+  return 1
+}
+
 main() {
   REPO_URL="${REPO_URL:-https://github.com/adamnugraha/kai-workshop.git}"
   LAB_DIR="${LAB_DIR:-/opt/kai-workshop}"
@@ -24,9 +43,10 @@ main() {
 
   step "RelNusa lab bootstrap (log: $LOG)"
   export DEBIAN_FRONTEND=noninteractive
-  step "Base packages"
-  apt-get update -q
-  apt-get install -y -q git curl ca-certificates >/dev/null
+  step "Base packages (first waiting for the VM's own package updates)"
+  wait_for_apt
+  apt_retry update -q
+  apt_retry install -y -q git curl ca-certificates >/dev/null
 
   step "Lab code in $LAB_DIR"
   if [ -d "$LAB_DIR/.git" ]; then

@@ -39,11 +39,11 @@ To keep everything on 127.0.0.1 and use an SSH tunnel instead, add `export LAB_A
 
 `n2-standard-8` instead of `e2-standard-8` gives steadier CPU for the load tests.
 
-**VM made with an earlier version of this guide** (firewall rule for port 80 only, no HTTPS): open 443 in Cloud Shell, then update the lab on the VM. The update keeps the data and takes a few minutes.
+**VM made with an earlier version of this guide** (firewall rule for port 80 only, no HTTPS): open 443 in Cloud Shell, then update the lab on the VM. It keeps the data and takes a few minutes. Later updates are just `./lab.sh update`; older copies of the script do not have that command yet.
 
 ```bash
 gcloud compute firewall-rules update kai-lab-http --allow=tcp:80,tcp:443   # Cloud Shell
-cd /opt/kai-workshop && ./lab.sh update                                    # on the VM
+cd /opt/kai-workshop && sudo git pull && ./lab.sh apply                    # on the VM
 ```
 
 ## 2. Check the install

@@ -50,7 +50,7 @@ sudo ./lab.sh install-deps      # Docker, k3d, kubectl, helm and plugins
 
 `./lab.sh` switches to root by itself (it asks for your sudo password if needed). If the detected public IP is wrong (for example behind a provider's NAT), set `LAB_PUBLIC_IP` in `lab.env` and run `./lab.sh update-ip`. Behind a corporate proxy that re-signs TLS, point `LAB_EXTRA_CA` in `lab.env` at the proxy's CA bundle.
 
-Later changes to this repository reach an installed lab with `./lab.sh update`, which pulls the code and re-applies it without touching the data. After editing `lab.env`, run `./lab.sh apply`.
+Later changes to this repository reach an installed lab with `./lab.sh update`, which pulls the code and re-applies it without touching the data (a copy older than that command needs `git pull && ./lab.sh apply` once). After editing `lab.env`, run `./lab.sh apply`.
 
 ## 4. Tunnel mode only: reach it from the laptop
 

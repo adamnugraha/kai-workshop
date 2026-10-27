@@ -55,7 +55,7 @@ cd /opt/kai-workshop
 
 `./lab.sh` switches to root by itself, so the `ubuntu` user is fine. If you skipped the user data, install by hand: `curl -fsSL https://raw.githubusercontent.com/adamnugraha/kai-workshop/main/bootstrap.sh | sudo bash`.
 
-**Instance made with an earlier version of this guide** (no HTTPS): add an inbound rule for **HTTPS (443)** from Anywhere to its security group, then run `cd /opt/kai-workshop && ./lab.sh update` on the VM. The update keeps the data and takes a few minutes.
+**Instance made with an earlier version of this guide** (no HTTPS): add an inbound rule for **HTTPS (443)** from Anywhere to its security group, then run `cd /opt/kai-workshop && sudo git pull && ./lab.sh apply` on the VM. It keeps the data and takes a few minutes. (Later updates are just `./lab.sh update`; older copies of the script do not have that command yet.)
 
 ## 5. Open the lab
 

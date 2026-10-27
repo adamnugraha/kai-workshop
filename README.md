@@ -79,6 +79,8 @@ Memperbarui lab yang sudah terpasang ke versi terbaru repositori ini (data dan r
 ./lab.sh update
 ```
 
+Salinan lama yang belum punya perintah `update` cukup sekali menjalankan `sudo git pull && ./lab.sh apply`.
+
 ## Cara mengakses
 
 Ada dua mode, dipilih dengan `LAB_ACCESS` di `lab.env` sebelum `./lab.sh up`.

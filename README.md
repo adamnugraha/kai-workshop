@@ -167,6 +167,7 @@ lab.sh          satu pintu untuk memasang dan menjalankan demo
 ## Catatan
 
 - Lab dibuat untuk pelatihan. Di mode `public` alamat memakai HTTPS dengan sertifikat Let's Encrypt, dan HTTP biasa tetap tersedia; alat operator dilindungi login sederhana, dan tidak ada data nyata di dalam lab. Hapus VM setelah acara.
+- Setiap kali cluster dibuat ulang (`./lab.sh down` lalu `./lab.sh up`), lab meminta sertifikat baru. Let's Encrypt hanya menerbitkan lima sertifikat per minggu untuk nama yang sama, jadi jangan membuat ulang cluster lebih sering dari itu; `./lab.sh restart`, `./lab.sh apply` dan `./lab.sh update` memakai sertifikat yang sudah ada.
 - Angka kinerja di lab bergantung pada ukuran VM dan tidak bisa langsung dibandingkan dengan sistem produksi mana pun.
 
 ## Lisensi

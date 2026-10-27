@@ -63,8 +63,8 @@ If you changed `HTTP_PORT`, use it on the right-hand side (for example `-L 8080:
 ## 5. Removing it
 
 ```bash
-./lab.sh down                   # deletes the cluster and its containers
+./lab.sh down                   # deletes the cluster, its containers and its certificates
 sudo systemctl disable relnusa-lab.service
 ```
 
-Docker and the tools stay installed. The kernel settings the installer adds are in `/etc/sysctl.d/99-relnusa-lab.conf` and `/etc/modules-load.d/relnusa-lab.conf`; delete them if you do not want them.
+Each new cluster asks Let's Encrypt for new certificates, and Let's Encrypt issues at most five a week for the same names, so do not rebuild more often than that; `restart`, `apply` and `update` reuse the existing certificates. Docker and the tools stay installed. The kernel settings the installer adds are in `/etc/sysctl.d/99-relnusa-lab.conf` and `/etc/modules-load.d/relnusa-lab.conf`; delete them if you do not want them.

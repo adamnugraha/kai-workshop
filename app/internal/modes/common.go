@@ -52,7 +52,7 @@ func openRedis() *redis.Client {
 	return rdb
 }
 
-// storeErr maps store and context errors to HTTP answers in Bahasa Indonesia.
+// storeErr maps store and context errors to HTTP answers for passengers.
 func storeErr(w http.ResponseWriter, err error) {
 	switch {
 	case errors.Is(err, store.ErrNotFound):

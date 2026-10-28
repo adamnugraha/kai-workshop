@@ -183,6 +183,10 @@ cmd_install_deps() {
 
   c_info "Kernel settings for many containers and network fault injection"
   cat >/etc/sysctl.d/99-relnusa-lab.conf <<'EOF'
+# Containers reach the internet only while the kernel forwards packets.
+# Google Cloud's Ubuntu image turns forwarding off in
+# 60-gce-network-security.conf; this file is read after it.
+net.ipv4.ip_forward = 1
 fs.inotify.max_user_instances = 8192
 fs.inotify.max_user_watches = 524288
 net.core.somaxconn = 4096
@@ -1178,9 +1182,19 @@ Between rounds
 EOF
 }
 
+ensure_forwarding() {
+  # Docker turns IP forwarding on when it starts, but re-applying the system
+  # settings can turn it off again (Google Cloud's Ubuntu image sets
+  # net.ipv4.ip_forward=0). Without it no container reaches the internet:
+  # image builds fail with DNS timeouts and the cluster cannot pull images.
+  [ "$(cat /proc/sys/net/ipv4/ip_forward 2>/dev/null)" = 1 ] && return 0
+  c_warn "IP forwarding was off, so containers could not reach the internet; turning it on"
+  sysctl -qw net.ipv4.ip_forward=1 || c_warn "could not turn it on; run: sudo sysctl -w net.ipv4.ip_forward=1"
+}
+
 main() {
   local cmd="${1:-help}"; shift || true
-  case "$cmd" in help|-h|--help|install-deps) ;; *) ensure_domain;; esac
+  case "$cmd" in help|-h|--help|install-deps) ;; *) ensure_forwarding; ensure_domain;; esac
   case "$cmd" in
     install-deps) cmd_install_deps "$@";;
     up) cmd_up "$@";;

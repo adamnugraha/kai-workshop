@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160" role="img" aria-label="RelNusa Availability Lab">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff3a5c"/>
+      <stop offset="1" stop-color="#b80023"/>
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="152" height="152" rx="36" fill="url(#bg)"/>
+  <!-- An availability ring that is almost closed, around a heartbeat -->
+  <path d="M 104.6 41.4 A 46 46 0 1 0 121.6 61.9" fill="none" stroke="#ffffff" stroke-width="10" stroke-linecap="round"/>
+  <circle cx="80" cy="80" r="31" fill="#1F2026"/>
+  <polyline points="58,82 68,82 74,66 82,98 89,74 94,82 102,82" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

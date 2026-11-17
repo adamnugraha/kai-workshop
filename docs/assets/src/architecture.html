@@ -1,0 +1,111 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="style.css">
+<style>
+body { width: 1200px; height: 1094px; }
+.head { position: absolute; left: 60px; top: 28px; }
+.head h2 { font-size: 30px; margin-top: 6px; }
+.box { position: absolute; padding: 12px 16px; }
+.box h3 { font-size: 18px; margin: 2px 0 3px; }
+.box p { font-size: 13.5px; }
+.center { text-align: center; }
+.zone { position: absolute; border-radius: 18px; border: 1px solid color-mix(in oklab, var(--c) 50%, var(--line)); background: color-mix(in oklab, var(--c) 5%, transparent); }
+.zone .tag { position: absolute; left: 18px; top: 14px; color: var(--c); }
+.data { position: absolute; display: flex; gap: 12px; align-items: stretch; padding: 10px 12px; }
+.data .tag { align-self: center; width: 46px; color: var(--c); }
+.data .item { flex: 1; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2); padding: 7px 12px; }
+.data .item b { font-family: var(--title); font-size: 16px; }
+.data .item span { display: block; font-size: 13px; color: var(--muted); }
+.note { position: absolute; font-size: 13.5px; line-height: 1.38; color: color-mix(in oklab, var(--legacy) 70%, var(--text)); }
+.note .tag { display: block; color: var(--legacy); margin-bottom: 8px; }
+.note ul { list-style: none; display: flex; flex-direction: column; gap: 7px; }
+.note li { padding-left: 14px; position: relative; }
+.note li::before { content: ""; position: absolute; left: 0; top: 7px; width: 6px; height: 6px; border-radius: 50%; background: var(--legacy); }
+.ops { position: absolute; padding: 12px 16px; }
+.ops .tag { display: block; margin-bottom: 9px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.ops .chip { font-size: 12px; padding: 5px 10px; gap: 6px; }
+.chip i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; background: var(--c); }
+.under { position: absolute; left: 60px; top: 1022px; width: 1080px; height: 48px; display: flex; align-items: center; gap: 8px; padding: 0 16px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface); }
+.under .tag { color: var(--faint); margin-right: 6px; }
+.under .chip { font-size: 12px; padding: 5px 10px; }
+svg { position: absolute; inset: 0; }
+.ln { fill: none; stroke-width: 1.8; }
+.ln.n { stroke: var(--faint); } .ln.lg { stroke: var(--legacy); } .ln.md { stroke: var(--modern); }
+.tn { fill: var(--faint); } .tl { fill: var(--legacy); } .tm { fill: var(--modern); }
+.lab { font-family: var(--mono); font-size: 11.5px; }
+</style></head>
+<body>
+<div class="glow" style="width:440px;height:440px;left:620px;top:420px;background:var(--modern);opacity:.14"></div>
+<div class="glow" style="width:360px;height:360px;left:20px;top:420px;background:var(--legacy);opacity:.14"></div>
+<div class="dots"></div>
+<div class="head"><div class="kicker">How it fits together</div><h2>The same booking code, deployed two ways behind one front door</h2></div>
+
+<svg viewBox="0 0 1200 1094">
+  <defs>
+    <marker id="an" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="tn"/></marker>
+    <marker id="al" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="tl"/></marker>
+    <marker id="am" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="tm"/></marker>
+  </defs>
+  <path class="ln n" d="M600 164 V188" marker-end="url(#an)"/>
+  <path class="ln n" d="M330 262 V328" marker-end="url(#an)"/>
+  <path class="ln n" d="M780 262 V328" marker-end="url(#an)"/>
+  <path class="ln n" d="M720 414 V444" marker-end="url(#an)"/>
+  <path class="ln n" d="M840 414 V444" marker-end="url(#an)"/>
+  <path class="ln n" d="M605 530 V560" marker-end="url(#an)"/>
+  <path class="ln n" d="M955 530 V560" marker-end="url(#an)"/>
+  <path class="ln md" d="M780 664 V634" marker-end="url(#am)"/>
+  <path class="ln md" d="M780 744 V794" marker-end="url(#am)"/>
+  <path class="ln lg" d="M370 382 H405 V794" marker-end="url(#al)"/>
+  <text class="lab tn" x="340" y="286">legacy.&lt;ip&gt;.sslip.io</text>
+  <text class="lab tn" x="790" y="286">app.&lt;ip&gt;.sslip.io</text>
+  <text class="lab tm" x="792" y="653">reads the queue, marks PAID</text>
+  <text class="lab tm" x="792" y="784">after the seat is held</text>
+  <text class="lab tl" x="396" y="786" text-anchor="end">inside the transaction, no timeout</text>
+</svg>
+
+<div class="card box center" style="left:450px;top:104px;width:300px;height:60px;padding:9px 16px"><h3>Passengers</h3><p>k6 load scripts and browsers</p></div>
+<div class="card box center" style="left:300px;top:190px;width:600px;height:72px"><div class="tag" style="color:var(--faint)">Traefik ingress</div><h3>One front door for both sites</h3><p>Routes by host name, retries a failed connection, counts every request</p></div>
+
+<div class="zone l" style="left:60px;top:296px;width:330px;height:468px"><div class="tag">Legacy &middot; one node (zone-b)</div></div>
+<div class="card box edge l" style="left:80px;top:330px;width:290px;height:104px"><h3>Monolith</h3><p>Search, booking and payment in one process, with a pool of 20 database connections</p></div>
+<div class="card box edge l" style="left:80px;top:470px;width:290px;height:84px"><h3>PostgreSQL</h3><p>One instance, no replica, on the same node as the app</p></div>
+<div class="note" style="left:82px;top:584px;width:290px"><span class="tag">Where it breaks</span><ul><li>A slow bank keeps the seat locked and a connection busy</li><li>A rush uses up the 20 connections, so search stalls too</li><li>If its one node stops, the whole site stops</li><li>A release stops the site for about 15 seconds</li></ul></div>
+
+<div class="zone m" style="left:420px;top:296px;width:720px;height:468px"><div class="tag">Modern &middot; three zones</div></div>
+<div class="card box edge m" style="left:665px;top:330px;width:230px;height:84px"><h3>Gateway &times;2</h3><p>Virtual waiting room, about 120 bookings a second</p></div>
+<div class="card box edge m" style="left:440px;top:446px;width:330px;height:84px"><h3>Search &times;2 to 6</h3><p>Redis cache, a stale copy when the database is slow, read replicas</p></div>
+<div class="card box edge m" style="left:790px;top:446px;width:330px;height:84px"><h3>Booking &times;4</h3><p>Holds the seat in one statement, queues the payment, canary releases</p></div>
+<div class="card data edge m" style="left:440px;top:562px;width:680px;height:70px">
+  <div class="tag">Data</div>
+  <div class="item"><b>Redis</b><span>cache and payment queue</span></div>
+  <div class="item"><b>PostgreSQL</b><span>1 primary and 2 replicas, automatic failover</span></div>
+</div>
+<div class="card box edge m" style="left:665px;top:664px;width:230px;height:80px"><h3>Payment worker &times;2</h3><p>800 ms timeout, circuit breaker, idempotency key</p></div>
+
+<div class="card box center edge b" style="left:300px;top:796px;width:600px;height:70px"><div class="tag">Simulated bank</div><h3 style="font-size:17px">Normal, slow, error-prone or down, on command</h3></div>
+
+<div class="card ops edge o" style="left:60px;top:892px;width:640px;height:112px">
+  <span class="tag">Measure and alert</span>
+  <div class="chips">
+    <span class="chip o"><i></i>Prometheus and Sloth SLO rules</span>
+    <span class="chip o"><i></i>Grafana</span>
+    <span class="chip o"><i></i>Alertmanager to Telegram</span>
+    <span class="chip o"><i></i>OpenTelemetry Collector to Jaeger</span>
+  </div>
+</div>
+<div class="card ops edge x" style="left:720px;top:892px;width:420px;height:112px">
+  <span class="tag">Change and test</span>
+  <div class="chips">
+    <span class="chip x"><i></i>Argo Rollouts</span>
+    <span class="chip x"><i></i>Chaos Mesh</span>
+    <span class="chip x"><i></i>k6 load tests</span>
+  </div>
+</div>
+<div class="under">
+  <span class="tag">Underneath</span>
+  <span class="chip">k3d: k3s in Docker on one VM</span>
+  <span class="chip">3 nodes labelled zone-a, zone-b, zone-c</span>
+  <span class="chip">HTTPS from Let's Encrypt via sslip.io</span>
+  <span class="chip">lab.sh</span>
+</div>
+</body></html>

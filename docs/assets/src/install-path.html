@@ -1,0 +1,44 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="style.css">
+<style>
+body { width: 1200px; height: 372px; }
+.head { position: absolute; left: 60px; top: 28px; }
+.head h2 { font-size: 30px; margin-top: 6px; }
+.step { position: absolute; top: 122px; width: 165px; height: 168px; padding: 12px 14px; }
+.step .n { font-family: var(--title); font-size: 24px; font-weight: 700; color: var(--c); }
+.step h3 { font-size: 17.5px; margin: 2px 0 6px; }
+.step p { font-size: 13px; }
+.step code { display: block; margin-top: 6px; font-size: 11px; color: var(--text); background: var(--surface-2); border: 1px solid var(--line); border-radius: 6px; padding: 5px 7px; word-break: break-word; }
+.one { position: absolute; left: 60px; top: 312px; width: 1080px; height: 40px; display: flex; align-items: center; gap: 12px; padding: 0 16px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); }
+.one .tag { color: var(--faint); white-space: nowrap; }
+.one code { font-size: 12.5px; color: var(--text); white-space: nowrap; }
+.one span.p { font-size: 13.5px; color: var(--muted); }
+svg { position: absolute; inset: 0; }
+.ln { fill: none; stroke-width: 1.8; stroke: var(--faint); }
+.tn { fill: var(--faint); }
+</style></head>
+<body>
+<div class="glow" style="width:420px;height:420px;left:-80px;top:-160px;background:var(--red);opacity:.22"></div>
+<div class="dots"></div>
+<div class="head"><div class="kicker">From an empty VM to the first demo</div><h2>Six steps, most of them one command</h2></div>
+
+<svg viewBox="0 0 1200 372">
+  <defs>
+    <marker id="an" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="tn"/></marker>
+  </defs>
+  <path class="ln" d="M226 206 H241" marker-end="url(#an)"/>
+  <path class="ln" d="M409 206 H424" marker-end="url(#an)"/>
+  <path class="ln" d="M592 206 H607" marker-end="url(#an)"/>
+  <path class="ln" d="M775 206 H790" marker-end="url(#an)"/>
+  <path class="ln" d="M958 206 H973" marker-end="url(#an)"/>
+</svg>
+
+<div class="card step edge r" style="left:60px"><div class="n">1</div><h3>Get a VM</h3><p>Ubuntu 22.04 or 24.04, 8 vCPUs, 32 GB, 100 GB disk; 4 vCPUs and 16 GB for the small profile</p></div>
+<div class="card step edge o" style="left:243px"><div class="n">2</div><h3>Install the tools</h3><p>Docker, k3d, kubectl, Helm and plugins</p><code>sudo ./lab.sh install-deps</code></div>
+<div class="card step edge o" style="left:426px"><div class="n">3</div><h3>Start the lab</h3><p>15 to 25 minutes the first&nbsp;time</p><code>./lab.sh up</code></div>
+<div class="card step edge m" style="left:609px"><div class="n">4</div><h3>Open it</h3><p>Every address and the password</p><code>./lab.sh info</code></div>
+<div class="card step edge m" style="left:792px"><div class="n">5</div><h3>Check it</h3><p>Everything at once, before going on stage</p><code>./lab.sh preflight</code></div>
+<div class="card step edge x" style="left:975px"><div class="n">6</div><h3>Run the demos</h3><p>Rush, release, break; then reset for the next round</p><code>./lab.sh reset</code></div>
+
+<div class="one"><span class="tag">Or in one go</span><code>curl -fsSL https://raw.githubusercontent.com/adamnugraha/kai-workshop/main/bootstrap.sh | sudo bash</code></div>
+</body></html>

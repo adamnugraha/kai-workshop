@@ -1,0 +1,54 @@
+/* Shared look of the README figures: IOH red on ink, one accent per part of the lab. */
+:root {
+  --red: #E4002B;
+  --red-soft: #ff4d6a;
+  --ink: #1F2026;
+  --ground: #121318;
+  --surface: #1b1d24;
+  --surface-2: #232631;
+  --line: #343846;
+  --text: #f1f2f5;
+  --muted: #a9adbb;
+  --faint: #6f7484;
+  --legacy: #fb923c;   /* the legacy site */
+  --modern: #10b981;   /* the modern site */
+  --ops: #38a3f5;      /* measuring and alerting */
+  --change: #a78bfa;   /* releases and failure tests */
+  --bank: #f5a524;     /* the simulated bank */
+  --title: Cambria, Caladea, "DejaVu Serif", serif;
+  --body: Calibri, Carlito, Inter, "DejaVu Sans", sans-serif;
+  --mono: "DejaVu Sans Mono", monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--ground);
+  color: var(--text);
+  font-family: var(--body);
+  overflow: hidden;
+  position: relative;
+}
+.glow { position: absolute; border-radius: 50%; filter: blur(90px); opacity: .32; pointer-events: none; }
+.dots {
+  position: absolute; inset: 0; pointer-events: none;
+  background-image: radial-gradient(rgba(255,255,255,.07) 1px, transparent 1.2px);
+  background-size: 22px 22px;
+  -webkit-mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%);
+}
+.kicker { font-family: var(--mono); font-size: 13px; letter-spacing: .18em; text-transform: uppercase; color: var(--faint); }
+h1, h2, h3 { font-family: var(--title); font-weight: 700; letter-spacing: -.01em; }
+.red { color: var(--red-soft); }
+.chip {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--mono); font-size: 13px; color: var(--text);
+  padding: 7px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface);
+}
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px;
+}
+.card h3 { font-size: 19px; margin-bottom: 4px; }
+.card p { color: var(--muted); font-size: 14.5px; line-height: 1.35; }
+.tag { font-family: var(--mono); font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; }
+.l { --c: var(--legacy); } .m { --c: var(--modern); } .o { --c: var(--ops); } .x { --c: var(--change); } .b { --c: var(--bank); } .r { --c: var(--red-soft); }
+.edge { border-color: color-mix(in oklab, var(--c) 55%, var(--line)); background: color-mix(in oklab, var(--c) 9%, var(--surface)); }
+.edge .tag { color: var(--c); }
+code, .code { font-family: var(--mono); font-size: .86em; color: var(--text); }

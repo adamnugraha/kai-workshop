@@ -1,0 +1,52 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="style.css">
+<style>
+body { width: 1200px; height: 574px; }
+.head { position: absolute; left: 60px; top: 28px; }
+.head h2 { font-size: 30px; margin-top: 6px; }
+.step { position: absolute; top: 128px; width: 160px; height: 170px; padding: 12px 14px; }
+.step h3 { font-size: 18px; margin: 4px 0 4px; }
+.step p { font-size: 13.5px; }
+.step code { display: block; margin-top: 8px; font-size: 11px; color: var(--c); }
+.use { position: absolute; top: 352px; height: 116px; padding: 12px 16px; }
+.use h3 { font-size: 18px; margin: 4px 0 4px; }
+.use p { font-size: 13.5px; }
+.foot { position: absolute; left: 60px; top: 500px; width: 1080px; font-size: 14.5px; color: var(--muted); line-height: 1.4; }
+svg { position: absolute; inset: 0; }
+.ln { fill: none; stroke-width: 1.8; stroke: var(--faint); }
+.tn { fill: var(--faint); }
+.lab { font-family: var(--mono); font-size: 11.5px; }
+</style></head>
+<body>
+<div class="glow" style="width:420px;height:420px;left:840px;top:40px;background:var(--red);opacity:.2"></div>
+<div class="glow" style="width:420px;height:420px;left:200px;top:220px;background:var(--ops);opacity:.12"></div>
+<div class="dots"></div>
+<div class="head"><div class="kicker">From a line of code to an alert</div><h2>Only SLO alerts reach a person; everything else stays on the dashboards</h2></div>
+
+<svg viewBox="0 0 1200 574">
+  <defs>
+    <marker id="an" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="tn"/></marker>
+  </defs>
+  <path class="ln" d="M221 213 H242" marker-end="url(#an)"/>
+  <path class="ln" d="M405 213 H426" marker-end="url(#an)"/>
+  <path class="ln" d="M589 213 H610" marker-end="url(#an)"/>
+  <path class="ln" d="M773 213 H794" marker-end="url(#an)"/>
+  <path class="ln" d="M957 213 H978" marker-end="url(#an)"/>
+  <path class="ln" d="M324 298 V320 H240 V350" marker-end="url(#an)"/>
+  <path class="ln" d="M324 320 H620 V350" marker-end="url(#an)"/>
+  <text class="lab tn" x="336" y="314">the same metrics also drive</text>
+</svg>
+
+<div class="card step edge m" style="left:60px"><div class="tag">Code</div><h3>Count</h3><p>The payment worker counts every attempt by its outcome</p><code>payment_attempts_<wbr>total</code></div>
+<div class="card step edge o" style="left:244px"><div class="tag">Scrape</div><h3>Collect</h3><p>Prometheus reads /metrics on every pod every 5&nbsp;s</p><code>PodMonitor relnusa</code></div>
+<div class="card step edge o" style="left:428px"><div class="tag">Target</div><h3>Set the SLO</h3><p>99.9% of payment attempts succeed</p><code>relnusa-slos.yaml</code></div>
+<div class="card step edge o" style="left:612px"><div class="tag">Rules</div><h3>Generate</h3><p>Sloth writes error ratios over windows from 5&nbsp;min to 30&nbsp;days</p></div>
+<div class="card step edge o" style="left:796px"><div class="tag">Burn rate</div><h3>Decide</h3><p>Page when 5&nbsp;min and 1&nbsp;h burn above 14.4&times;, or 30&nbsp;min and 6&nbsp;h above 6&times;</p></div>
+<div class="card step edge r" style="left:980px"><div class="tag">Route</div><h3>Notify</h3><p>Alertmanager sends alerts with an SLO label to Telegram</p><code>sloth_slo=~".+"</code></div>
+
+<div class="card use edge o" style="left:60px;width:360px"><div class="tag">Grafana</div><h3>Three dashboards</h3><p>Both sites side by side, SLOs and error budgets, and the inside of the modern design</p></div>
+<div class="card use edge x" style="left:440px;width:360px"><div class="tag">Argo Rollouts</div><h3>Canary analysis</h3><p>Every 15 s; more than 5% server errors on the new version and the release stops by itself</p></div>
+<div class="card use edge o" style="left:820px;width:320px"><div class="tag">Traces, a separate path</div><h3>OpenTelemetry to Jaeger</h3><p>10% of modern requests and 20% of legacy ones, followed hop by hop</p></div>
+
+<div class="foot">Availability and latency follow the same chain but are measured at Traefik, where passengers arrive, so a 503 sent when no pod is ready still counts against the budget.</div>
+</body></html>

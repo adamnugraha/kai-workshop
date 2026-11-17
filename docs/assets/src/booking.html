@@ -1,0 +1,66 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="style.css">
+<style>
+body { width: 1200px; height: 660px; }
+.head { position: absolute; left: 60px; top: 28px; }
+.head h2 { font-size: 30px; margin-top: 6px; }
+.lane { position: absolute; left: 60px; width: 150px; }
+.lane .tag { color: var(--c); font-size: 13px; }
+.lane p { font-size: 14px; color: var(--muted); margin-top: 6px; line-height: 1.3; }
+.step { position: absolute; width: 205px; padding: 12px 14px; }
+.step .n { font-family: var(--mono); font-size: 12px; color: var(--c); }
+.step h3 { font-size: 17.5px; margin: 3px 0 4px; }
+.step p { font-size: 13.5px; }
+.lock { position: absolute; height: 30px; border-radius: 8px; display: flex; align-items: center; padding: 0 12px;
+  background: color-mix(in oklab, var(--red) 22%, transparent); border: 1px solid color-mix(in oklab, var(--red-soft) 70%, transparent);
+  font-family: var(--mono); font-size: 12px; color: #ffd0d8; white-space: nowrap; }
+.note { position: absolute; font-size: 14px; line-height: 1.4; color: var(--muted); }
+.note .tag { display: block; color: var(--modern); margin-bottom: 6px; }
+svg { position: absolute; inset: 0; }
+.ln { fill: none; stroke-width: 1.8; }
+.ln.lg { stroke: var(--legacy); } .ln.md { stroke: var(--modern); }
+.tl { fill: var(--legacy); } .tm { fill: var(--modern); }
+.lab { font-family: var(--mono); font-size: 11.5px; }
+.rule { position: absolute; left: 60px; width: 1080px; height: 1px; background: var(--line); }
+</style></head>
+<body>
+<div class="glow" style="width:420px;height:420px;left:420px;top:40px;background:var(--red);opacity:.16"></div>
+<div class="dots"></div>
+<div class="head"><div class="kicker">One booking, two designs</div><h2>Legacy keeps the seat locked while the bank answers; modern lets go at once</h2></div>
+
+<svg viewBox="0 0 1200 660">
+  <defs>
+    <marker id="al" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="tl"/></marker>
+    <marker id="am" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="tm"/></marker>
+  </defs>
+  <path class="ln lg" d="M435 183 H463" marker-end="url(#al)"/>
+  <path class="ln lg" d="M670 183 H698" marker-end="url(#al)"/>
+  <path class="ln lg" d="M905 183 H933" marker-end="url(#al)"/>
+  <path class="ln md" d="M435 389 H463" marker-end="url(#am)"/>
+  <path class="ln md" d="M670 389 H698" marker-end="url(#am)"/>
+  <path class="ln md" d="M905 389 H933" marker-end="url(#am)"/>
+  <path class="ln md" d="M802 440 V528" marker-end="url(#am)"/>
+  <path class="ln md" d="M905 578 H933" marker-end="url(#am)"/>
+  <text class="lab tm" x="814" y="490">the worker reads the job</text>
+</svg>
+
+<div class="lane l" style="top:142px"><div class="tag">Legacy</div><p>One database transaction wraps the bank call</p></div>
+<div class="card step edge l" style="left:230px;top:132px;height:102px"><div class="n">1</div><h3>Lock the seat row</h3><p><code>SELECT … FOR UPDATE</code></p></div>
+<div class="card step edge l" style="left:465px;top:132px;height:102px"><div class="n">2</div><h3>Call the bank</h3><p>No timeout: 120 ms, or 3 s when the bank is slow</p></div>
+<div class="card step edge l" style="left:700px;top:132px;height:102px"><div class="n">3</div><h3>Save and commit</h3><p><code>UPDATE</code>, <code>INSERT</code>, <code>COMMIT</code></p></div>
+<div class="card step edge l" style="left:935px;top:132px;height:102px"><div class="n">4</div><h3>Answer 201 PAID</h3><p>Only after the bank has answered</p></div>
+<div class="lock" style="left:230px;top:248px;width:675px">Seat row locked &middot; 1 of 20 database connections busy &middot; the passenger waits</div>
+
+<div class="rule" style="top:306px"></div>
+
+<div class="lane m" style="top:348px"><div class="tag">Modern</div><p>Hold the seat first, pay in the background</p></div>
+<div class="card step edge m" style="left:230px;top:338px;height:102px"><div class="n">1</div><h3>Admit or queue</h3><p>About 120 bookings a second; the rest get QUEUED</p></div>
+<div class="card step edge m" style="left:465px;top:338px;height:102px"><div class="n">2</div><h3>Hold the seat</h3><p>One SQL statement, done in milliseconds</p></div>
+<div class="card step edge m" style="left:700px;top:338px;height:102px"><div class="n">3</div><h3>Queue the payment</h3><p><code>XADD</code> to the <code>payments</code> stream</p></div>
+<div class="card step edge m" style="left:935px;top:338px;height:102px"><div class="n">4</div><h3>Answer 202 HELD</h3><p>Before the bank is called</p></div>
+<div class="lock" style="left:465px;top:454px;width:205px">Lock: one statement</div>
+
+<div class="note" style="left:230px;top:528px;width:420px"><span class="tag">If the bank is slow or down</span>The job stays in the queue and is tried again. The booking id is the bank's idempotency key, so a retry never charges twice. Unpaid holds expire after 10 minutes.</div>
+<div class="card step edge m" style="left:700px;top:528px;height:102px"><div class="n">5</div><h3>Charge the bank</h3><p>800 ms timeout, behind a circuit breaker</p></div>
+<div class="card step edge m" style="left:935px;top:528px;height:102px"><div class="n">6</div><h3>Mark PAID</h3><p>The page asks every 1.5 s and shows the e-ticket</p></div>
+</body></html>
